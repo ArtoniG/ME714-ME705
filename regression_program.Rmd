@@ -1,13 +1,49 @@
 ---
-title: "mixed model"
-author: "Student"
-output:
-  html_document:
-    df_print: paged
+title: "Modelos de Regressão Linear Mistos para dados discretos: Uma
+abordagem utilizando MCMC através do Stan integrado ao R."
+author: 
+  - Guilherme Artoni - RA160318
+  - Citzen4 - RAXXXXXX
+  - Student - RAXXXXXX
+  - Malba Tahan - RAXXXXXX
+bibliography: referencia.bib
+output: 
+  bookdown::pdf_document2:
+    toc: FALSE
+  fig_crop: no
+fontsize: 10pt
+sansfont: Times
+documentclass: article
+geometry: 
+ - a4paper
+ - textwidth=18cm
+ - textheight=21cm
+header-includes:
+  - \usepackage[utf8]{inputenc}
+  - \usepackage[brazil, english, portuguese]{babel}
+  - \usepackage[utf8]{inputenc}
+  - \usepackage[T1]{fontenc}
+  - \usepackage[fixlanguage]{babelbib}
+  - \usepackage{times}
+
+  - \usepackage{graphicx}
+  - \usepackage{wrapfig}
+  - \usepackage{pdfpages}
+  
+  - \usepackage{amsfonts}
+  - \usepackage{amssymb}
+  - \usepackage{amsmath}
+  
+  - \usepackage{fancyhdr}
+  - \usepackage{subcaption}
+  - \usepackage{booktabs}
+  - \usepackage{caption}
+  - \usepackage{float}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE,error = FALSE)
+options(knitr.table.format = "latex")
 ```
 
 ```{r,warning=FALSE,message=FALSE,echo=FALSE}
@@ -15,11 +51,12 @@ library(nlme)
 library(nlmeU)
 library(lattice)
 library(rstanarm)
-source('~/Downloads/r_programs/regression/mixed_models/resid_anal_nlme.R')
-source('~/Downloads/r_programs/regression/cook_hat.R')
-source('~/Downloads/r_programs/regression/norm_diag.R')
-source('~/Downloads/r_programs/regression/envel_norm.R')
-source('~/Downloads/r_programs/regression/statistics_model_comparison.R')
+library(rstan)
+source('resid_anal_nlme.R')
+source('cook_hat.R')
+source('norm_diag.R')
+source('envel_norm.R')
+source('statistics_model_comparison.R')
 ```
 
 ```{r,warning=FALSE,message=FALSE}
@@ -205,7 +242,7 @@ stanDat <- list(N = nrow(X),
                 treat = as.integer(armd$treat.f))
 
 # FIT THE MODEL
-matrixFit <- stan(file = "~/Downloads/undergraduate/1sem20/ME714/application/matrixModel.stan",
+matrixFit <- stan(file = "matrixModel.stan",
                   data=stanDat,
                   iter = 2000, chains = 4)
 ```
