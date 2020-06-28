@@ -1,0 +1,211 @@
+---
+title: "mixed model"
+author: "Student"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,warning=FALSE,message=FALSE,echo=FALSE}
+library(nlme)
+library(nlmeU)
+library(lattice)
+library(rstanarm)
+source('~/Downloads/r_programs/regression/mixed_models/resid_anal_nlme.R')
+source('~/Downloads/r_programs/regression/cook_hat.R')
+source('~/Downloads/r_programs/regression/norm_diag.R')
+source('~/Downloads/r_programs/regression/envel_norm.R')
+source('~/Downloads/r_programs/regression/statistics_model_comparison.R')
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Gera os gráficos de perfis
+data(armd.wide, armd0, package = "nlmeU")
+armd0.subset <- subset(armd0, as.numeric(subject) %in% seq(1, 240, 10))
+xy1 <- xyplot(visual ~ jitter(time) | treat.f,
+              groups = subject,
+              data = armd0.subset,
+              type = "l", lty = 1)
+update(xy1, xlab = "Tempo (em semanas)", ylab = "Qualidade da visão", grid = "h")
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Gera a tabela do número de observações em cada semana
+attach(armd0)
+flst <- list(time.f, treat.f)
+(tN <- tapply(visual, flst, FUN = function(x) length(x[!is.na(x)])))
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Médias e medianas amostrais das medidas da qualidade da visão para cada semana observada
+tMn <- tapply(visual, flst, FUN = mean)
+tMd <- tapply(visual, flst, FUN = median)
+colnames(res <- cbind(tN, tMn, tMd))
+
+nms1 <- rep(c("P", "A"), 3)
+nms2 <- rep(c("n", "Mean", "Mdn"), rep(2,3))
+colnames(res) <- paste(nms1, nms2, sep = ":")
+res
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Gera os boxplots
+bw1 <- bwplot(visual ~ time.f | treat.f, data = armd0)
+xlims <- c("Base", "4\nwks", "12\nwks", "24\nwks", "52\nwks")
+update(bw1, xlim = xlims, pch = "|")
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Calcula as matrizes de variâncias e covariâncias e de correlações amostrais
+visual.x <- subset(armd.wide, select = c(visual0:visual52))
+(varx <- var(visual.x, use = "complete.obs"))
+
+print(cor(visual.x, use = "complete.obs"), digits = 2)
+```
+
+# MODELO NORMAL INDEPENDENTE HOMOCEDASTICO
+
+```{r,warning=FALSE,message=FALSE}
+# Ajuste do modelo Normal Independente Homocedástico
+lm.form <- formula(visual ~ -1 + visual0 + time.f + treat.f:time.f)
+lm6.1 <- lm(lm.form, armd)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Estimativas, Erros Padrão, t-value, p-value, coef. de determinação R² e R² ajustado e interv. conf.
+(summ <- summary(lm6.1))
+summ$sigma
+confint(lm6.1)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# ANOVA
+anova(lm6.1)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Análise de Resíduos
+
+normal_diag(lm6.1) #checa indepedência e homocedásticidade
+envelnorm(lm6.1) #checa normalidade
+cook_hat(lm6.1) #análise de influência e alavancagem
+```
+
+# MODELO MISTO FREQUENTISTA
+
+```{r,warning=FALSE,message=FALSE}
+# Ajusta o modelo misto homocedástico, estimativas (Max. Ver. Sim. Restrita), erros padrão, graus de liberdade, t-value, p-value
+lme.form <- formula(visual ~ visual0 + time + treat.f + treat.f:time)
+
+(fm16.1 <- lme(lme.form, random = ~1|subject, data = armd))
+printCoefmat(summary(fm16.1)$tTable, has.Pvalue = T, P.values = T)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Calcula a matriz de variâncias e covariâncias condicional
+getVarCov(fm16.1, type = "conditional", individual = "2")
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Calcula a matriz de variâncias e covariâncias 
+fm16.1cov <- getVarCov(fm16.1, type = "marginal", individual = "2")
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Calcula a matriz de covariâncias
+cov2cor(fm16.1cov[[1]])
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Plota Medida Lesaffre-Verbeke padronizada vs indices
+residdiag.nlme(fm16.1, limit =2,  plotid = 4)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Plota Resı́duos Marginais padronizados vs Valores ajustados e histograma correspondente
+residdiag.nlme(fm16.1, limit =2, plotid = 1)
+```
+
+```{r,warning=FALSE,message=FALSE}
+#Plota Resı́duos Condicionais padronizados vs Valores ajustados
+residdiag.nlme(fm16.1, limit =2, plotid = 5)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# QQ plot (Normal) e histograma dos resı́duos condicionais minimamente confundidos padronizados
+residdiag.nlme(fm16.1, limit =2, plotid = 6)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# QQ plot (Qui-quadrado) para a distância de Mahalanobis
+residdiag.nlme(fm16.1, limit =2, plotid = 3)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Plota Distância de Mahalanobis padronizada vs indices
+residdiag.nlme(fm16.1, limit =2, plotid = 2)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Plota Alavancagem conjunta generalizada [L1i(jj)] vs indices
+residdiag.nlme(fm16.1, limit =2, plotid = 14)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Plota Alavancagem conjunta generalizada [L2i(jj)] vs indices
+residdiag.nlme(fm16.1, limit =2, plotid = 15)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Plota Distância de Cook condicional 1 (D1i) vs ı́ndices
+residdiag.nlme(fm16.1, limit =2, plotid = 8)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Plota Distância de Cook condicional 2 (D2i) vs ı́ndices
+residdiag.nlme(fm16.1, limit =2, plotid = 9)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Plota Distância de Cook condicional 3 (D3i) vs ı́ndices
+residdiag.nlme(fm16.1, limit =2, plotid = 10)
+```
+
+```{r,warning=FALSE,message=FALSE}
+# Calcula os valores das estatísticas de comparação de modelos
+calc.estat.mod.comp.MRNLH(lm6.1) # modelo normal independente homocedástico
+calc.estat.mod.comp.MRNLH(fm16.1) # modelo misto
+```
+
+# MODELO MISTO BAYESIANO
+
+```{r}
+# MAKE DESIGN MATRIX
+X <- unname(model.matrix(~1+visual0+time+treat.f+treat.f:time,armd))
+attr(X,"assign") <- NULL
+Z <- matrix(1,nrow = nrow(X),ncol=1)
+
+# MAKE STAN DATA
+stanDat <- list(N = nrow(X),
+                P = ncol(X),
+                nr = ncol(Z),
+                X = X,
+                Z = Z,
+                Time = nlevels(armd$time.f),
+                M = nlevels(armd$treat.f),
+                I = nlevels(armd$subject),
+                patient = as.integer(armd$subject),
+                visual = as.integer(armd$visual),
+                visual0 = as.integer(armd$visual0),
+                time = as.integer(armd$time.f),
+                treat = as.integer(armd$treat.f))
+
+# FIT THE MODEL
+matrixFit <- stan(file = "~/Downloads/undergraduate/1sem20/ME714/application/matrixModel.stan",
+                  data=stanDat,
+                  iter = 2000, chains = 4)
+```
