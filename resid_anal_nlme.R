@@ -490,7 +490,7 @@ qqPlot2<-function(x, distribution="norm", ..., ylab=deparse(substitute(x)),
 #15- Generalized joint leverage [L2i(jj)] versus observation indices
 #16- Generalized joint leverage [L3i(jj)] versus observation indices
 #\n")
-    cat("\n Graph plotting", plotid)
+    #cat("\n Graph plotting", plotid)
     
     if(plotid==1)
     {
@@ -726,12 +726,13 @@ qqPlot2<-function(x, distribution="norm", ..., ylab=deparse(substitute(x)),
   
 
 # Obtain plots
+plotg(plotid)
 
-  for (g in plotid) {
-   plotg(g)
-    cat("\n Press ENTER to continue...")
-    readline()
-  }
+#  for (g in plotid) {
+#   plotg(g)
+#    cat("\n Press ENTER to continue...")
+#    readline()
+#  }
   
 useful.results <- list(
      std.marginal.residuals=cbind(Subject=id,Predicted=as.numeric(resmp)),

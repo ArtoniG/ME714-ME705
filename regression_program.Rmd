@@ -1,6 +1,5 @@
 ---
-title: "Modelos de Regressão Linear Mistos para dados discretos: Uma
-abordagem utilizando MCMC através do Stan integrado ao R."
+title: "Modelos de Regressão Linear Mistos para dados discretos: Uma abordagem utilizando MCMC através do Stan integrado ao R."
 author: 
   - Guilherme Artoni - RA160318
   - Citzen4 - RAXXXXXX
@@ -42,7 +41,11 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE,error = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE,
+                      warning = FALSE,error = FALSE,
+                      fig.align = "center",
+                      fig.width = 5,
+                      fig.height = 4)
 options(knitr.table.format = "latex")
 ```
 
@@ -58,6 +61,8 @@ source('norm_diag.R')
 source('envel_norm.R')
 source('statistics_model_comparison.R')
 ```
+
+The Stan project develops a probabilistic programming language that implements full Bayesian statistical inference via Markov Chain Monte Carlo, rough Bayesian inference via 'variational' approximation, and (optionally penalized) maximum likelihood estimation via optimization. In all three cases, automatic differentiation is used to quickly and accurately evaluate gradients without burdening the user with the need to derive the partial derivatives.
 
 ```{r,warning=FALSE,message=FALSE}
 # Gera os gráficos de perfis
@@ -126,9 +131,14 @@ anova(lm6.1)
 
 ```{r,warning=FALSE,message=FALSE}
 # Análise de Resíduos
-
 normal_diag(lm6.1) #checa indepedência e homocedásticidade
+```
+
+```{r,warning=FALSE,message=FALSE,include=FALSE}
 envelnorm(lm6.1) #checa normalidade
+```
+
+```{r,warning=FALSE,message=FALSE}
 cook_hat(lm6.1) #análise de influência e alavancagem
 ```
 
@@ -159,57 +169,57 @@ cov2cor(fm16.1cov[[1]])
 
 ```{r,warning=FALSE,message=FALSE}
 # Plota Medida Lesaffre-Verbeke padronizada vs indices
-residdiag.nlme(fm16.1, limit =2,  plotid = 4)
+#residdiag.nlme(fm16.1, limit =2,  plotid = 4)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 # Plota Resı́duos Marginais padronizados vs Valores ajustados e histograma correspondente
-residdiag.nlme(fm16.1, limit =2, plotid = 1)
+#residdiag.nlme(fm16.1, limit =2, plotid = 1)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 #Plota Resı́duos Condicionais padronizados vs Valores ajustados
-residdiag.nlme(fm16.1, limit =2, plotid = 5)
+#residdiag.nlme(fm16.1, limit =2, plotid = 5)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 # QQ plot (Normal) e histograma dos resı́duos condicionais minimamente confundidos padronizados
-residdiag.nlme(fm16.1, limit =2, plotid = 6)
+#residdiag.nlme(fm16.1, limit =2, plotid = 6)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 # QQ plot (Qui-quadrado) para a distância de Mahalanobis
-residdiag.nlme(fm16.1, limit =2, plotid = 3)
+#residdiag.nlme(fm16.1, limit =2, plotid = 3)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 # Plota Distância de Mahalanobis padronizada vs indices
-residdiag.nlme(fm16.1, limit =2, plotid = 2)
+#residdiag.nlme(fm16.1, limit =2, plotid = 2)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 # Plota Alavancagem conjunta generalizada [L1i(jj)] vs indices
-residdiag.nlme(fm16.1, limit =2, plotid = 14)
+#residdiag.nlme(fm16.1, limit =2, plotid = 14)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 # Plota Alavancagem conjunta generalizada [L2i(jj)] vs indices
-residdiag.nlme(fm16.1, limit =2, plotid = 15)
+#residdiag.nlme(fm16.1, limit =2, plotid = 15)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 # Plota Distância de Cook condicional 1 (D1i) vs ı́ndices
-residdiag.nlme(fm16.1, limit =2, plotid = 8)
+#residdiag.nlme(fm16.1, limit =2, plotid = 8)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 # Plota Distância de Cook condicional 2 (D2i) vs ı́ndices
-residdiag.nlme(fm16.1, limit =2, plotid = 9)
+#residdiag.nlme(fm16.1, limit =2, plotid = 9)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
 # Plota Distância de Cook condicional 3 (D3i) vs ı́ndices
-residdiag.nlme(fm16.1, limit =2, plotid = 10)
+#residdiag.nlme(fm16.1, limit =2, plotid = 10)
 ```
 
 ```{r,warning=FALSE,message=FALSE}
@@ -219,6 +229,8 @@ calc.estat.mod.comp.MRNLH(fm16.1) # modelo misto
 ```
 
 # MODELO MISTO BAYESIANO
+
+Segundo @chapman blablabla
 
 ```{r}
 # MAKE DESIGN MATRIX
