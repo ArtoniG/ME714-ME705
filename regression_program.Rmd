@@ -247,11 +247,12 @@ calc.estat.mod.comp.MRNLH(fm16.1) # modelo misto
 
 Segundo @manly a ideia básica por trás da Inferência Bayesiana é mudar as probabilidades para os parâmetros tomando valores númericos particulares para novas probabilidades como um resultado da coleta de mais dados, com essa mudança sendo alcançada através do Teorema de Bayes.
 Como um exemplo da abordagem Bayesiana, suponha que temos interesse no valor de um parâmetro $\theta$ de uma determinada população, e que antes de qualquer informação ser observada é de alguma forma possível afirmar que $\theta$ deve assumir um dos valores entre $\theta_1$, $\theta_1$, $\dots$, $\theta_n$ e que a probabilidade de o valor ser $\theta_i$ é $\pi(\theta_i)$.
-Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$ 
+Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$. Então o Teorema de Bayes afirma que a probabilidade de $\theta$ ser igual a $\theta_i$, dado novas observações, é 
+$$\pi(\theta_i|dados) = \frac{\pi(dados|\theta_i)p(\theta_i)}{\sum_{j=1}^n \pi(data|\theta_j)\pi(\theta_j)}, \quad (??)$$
 
 
 
-```{r}
+```{r include=FALSE}
 # MAKE DESIGN MATRIX
 X <- unname(model.matrix(~1+visual0+time+treat.f+treat.f:time,armd))
 attr(X,"assign") <- NULL
@@ -277,3 +278,5 @@ matrixFit <- stan(file = "matrixModel.stan",
                   data=stanDat,
                   iter = 2000, chains = 4)
 ```
+
+
