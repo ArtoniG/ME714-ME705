@@ -43,9 +43,7 @@ header-includes:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE,
                       warning = FALSE,error = FALSE,
-                      fig.align = "center",
-                      fig.width = 5,
-                      fig.height = 4)
+                      fig.align = "center")
 options(knitr.table.format = "latex")
 ```
 
@@ -55,6 +53,8 @@ library(nlmeU)
 library(lattice)
 library(rstanarm)
 library(rstan)
+library(tidyverse)
+library(kableExtra)
 source('resid_anal_nlme.R')
 source('cook_hat.R')
 source('norm_diag.R')
@@ -79,6 +79,64 @@ bmatrix = function(x, digits=NULL, ...) {
 
 The Stan project develops a probabilistic programming language that implements full Bayesian statistical inference via Markov Chain Monte Carlo, rough Bayesian inference via 'variational' approximation, and (optionally penalized) maximum likelihood estimation via optimization. In all three cases, automatic differentiation is used to quickly and accurately evaluate gradients without burdening the user with the need to derive the partial derivatives.
 
+# Introdução
+
+MOTIVAÇÃO SOBRE O MODELO:
+
+* Modelo com efeitos fixos e aleatórios.
+
+* Considerar variabilidade de perfis individuais.
+
+* Estudar e estimar componentes da variância descompactando e adicionando complexidade aos erros.
+
+* Resolver problemas de interdependência dos dados.
+
+Importante em diversas disciplinas 
+
+* ANOVA com efeitos mistos (Estatística, Econometria)
+
+* Modelos lineares hierárquicos (Educação)
+
+* Modelos de efeitos contextuais (Sociologia) 
+
+MOTIVAÇÃO SOBRE OS DADOS/EXPERIMENTO
+
+* Dados disponibilizados pelo Grupo de Estudo de Terapias Farmacológicas para Degeneração Macular (GETFDM) em 1997.
+        
+* Trata-se de informações sobre ensaios clínicos aleatorizados realizados em diferentes centros de estudos.
+        
+* O objetivo era comparar um tratamento experimental chamado \textit{interferon-$\alpha$} e o placebo para pacientes diagnosticados com Degeneração Macular Relacionada a Idade (DMRI).
+        
+* Os dados mostrados são em relação ao placebo e a maior dose administrada do interferon-$\alpha$. 
+
+MOTIVAÇÃO SOBRE A DOENÇA
+
+* Pacientes com DMRI gradativamente perdem a visão. 
+        
+* Durante os ensaios, a qualidade da visão de cada um dos 240 pacientes foi medida no início e após 4, 12, 24 e 52 semanas. 
+        
+* A qualidade da visão foi medida através da quantidade de letras que os pacientes foram capazes de ler em gráficos de visão padronizados.
+        
+* Segue que temos dados longitudinais para cada paciente em forma de medidas da qualidade de sua visão.
+
+MOTIVAÇÃO SOBRE MODELOS MISTOS
+
+$$\boldsymbol{Y}_{j(k_{j} \ \text{x} \ 1)} = \boldsymbol{X}_{j(k_{j} \ \text{x} \ p)}\boldsymbol{\beta}_{(p \ \text{x} \ 1)} + \boldsymbol{Z}_{j(k_{j} \ \text{x} \ q)}\boldsymbol{b}_{j(q \ \text{x} \ 1)}+\boldsymbol{\xi}_{j(k_{j} \ \text{x} \ 1)}$$
+Onde j = 1,2,...,n é o individuo
+\begin{itemize}
+    \item $\boldsymbol{Y}_{j} = (y_{j1},...,y_{jk_{j}})$, onde $k_{j}$:numero de avaliações realizadas no individuo j.
+    \item $\boldsymbol{X}_{j}$: matriz de planejamento associada aos efeitos fixos para o indivíduo j.
+    \item $\boldsymbol{\beta}$: vetor de efeitos fixos
+    \item $\boldsymbol{Z}_{j}$: matriz de planejamento associada aos efeitos aleatórios para o indivíduo j.
+    \item $\boldsymbol{b}_{j}$: vetor de efeitos aleatórios associado ao indivíduo j.
+    \item $\boldsymbol{\xi}_{j}$: vetor de erros associado ao indivíduo j.
+\end{itemize}
+$$ \boldsymbol{b}_j  \sim \boldsymbol{\cal{N}}_{k}( \boldsymbol{0},\boldsymbol{\cal{D)}} \;\; e \;\; \boldsymbol{\xi}_j \sim \boldsymbol{\cal{N}}_{n_i}( \boldsymbol{0}, \boldsymbol{\Sigma_j})$$
+
+# Metodologia
+
+## Análise Descritiva
+
 ```{r,warning=FALSE,message=FALSE}
 # Gera os gráficos de perfis
 data(armd.wide, armd0, package = "nlmeU")
@@ -94,20 +152,58 @@ update(xy1, xlab = "Tempo (em semanas)", ylab = "Qualidade da visão", grid = "h
 # Gera a tabela do número de observações em cada semana
 attach(armd0)
 flst <- list(time.f, treat.f)
-(tN <- tapply(visual, flst, FUN = function(x) length(x[!is.na(x)])))
+tN <- tapply(visual, flst, FUN = function(x) length(x[!is.na(x)]))
 ```
+
+\begin{table}
+    \centering
+    \begin{tabular}{ccc}
+    \multicolumn{3}{c}{\textbf{Contagem dos dados não faltantes}} \\
+    \hline
+        Tempo & Placebo & Active \\
+        Início & 119 & 121 \\
+        4º semana & 117 & 114 \\
+        12º semana & 117 & 110 \\
+        24º semana & 112 & 102 \\
+        52º semana & 105 & 90 \\
+    \hline
+    \end{tabular}
+    \caption{Contagem das vezes que os pacientes foi fazer a medição da qualidade da visão.}
+\end{table}
 
 ```{r,warning=FALSE,message=FALSE}
 # Médias e medianas amostrais das medidas da qualidade da visão para cada semana observada
 tMn <- tapply(visual, flst, FUN = mean)
 tMd <- tapply(visual, flst, FUN = median)
-colnames(res <- cbind(tN, tMn, tMd))
+#colnames(res <- cbind(tN, tMn, tMd))
+res <- cbind(tN, tMn, tMd)
 
 nms1 <- rep(c("P", "A"), 3)
 nms2 <- rep(c("n", "Mean", "Mdn"), rep(2,3))
 colnames(res) <- paste(nms1, nms2, sep = ":")
-res
+#res
 ```
+
+\begin{table}
+    \centering
+    \resizebox{10cm}{!}{
+    \begin{tabular}{ccccccc}
+    \multicolumn{7}{c}{\textbf{Médias e medianas amostrais das medidas de qualidade da visão}} \\
+    \hline
+        \textbf{Tempo}  & \multicolumn{3}{c|}{\textbf{Placebo}} & \multicolumn{3}{c}{\textbf{Active}}  \\
+         & Núm. de Indiv. & Média & \multicolumn{1}{c|}{Mediana} & Núm. de Indiv. & Média & Mediana \\
+         \cline{2-4}
+         \cline{5-7}
+         Início & 119 & 55,34 & \multicolumn{1}{c|}{56,0} & 121 & 54,58 & 57,0 \\
+         4º semana & 117 & 53,97 & \multicolumn{1}{c|}{54,0} & 114 & 50,91 & 52,0 \\
+         12º semana & 117 & 52,87 & \multicolumn{1}{c|}{53,0} & 110 & 48,67 & 49,5 \\
+         24º semana & 112 & 49,33 & \multicolumn{1}{c|}{50,5} & 102 & 45,46 & 45,0 \\
+         52º semana & 105 & 44,44 & \multicolumn{1}{c|}{44,0} & 90 & 39,10 & 37,0 \\
+         \hline
+    \end{tabular}
+    }
+    \caption{Médias e medianas amostrais das medidas de qualidade da visão.}
+\end{table}
 
 ```{r,warning=FALSE,message=FALSE}
 # Gera os boxplots
@@ -116,15 +212,79 @@ xlims <- c("Base", "4\nwks", "12\nwks", "24\nwks", "52\nwks")
 update(bw1, xlim = xlims, pch = "|")
 ```
 
+* Há um forte indício de simetria nas distribuições por médias e medianas apresentarem valores próximos.
+    
+* Podemos observar que o decrescimento das médias e medianas ao longo do tempo é também observado nos boxplots.
+    
+* Nota-se nos boxplots um aumento da variabilidade dos dados que foram coletados nas últimas semanas. Pode ser que o aumento no número de dados faltantes tenha ocasionado isso.
+
 ```{r,warning=FALSE,message=FALSE}
 # Calcula as matrizes de variâncias e covariâncias e de correlações amostrais
 visual.x <- subset(armd.wide, select = c(visual0:visual52))
-(varx <- var(visual.x, use = "complete.obs"))
+varx <- var(visual.x, use = "complete.obs")
 
-print(cor(visual.x, use = "complete.obs"), digits = 2)
+#bmatrix(cor(visual.x, use = "complete.obs"), digits = 2)
+
+#bmatrix(varx)
 ```
 
+* **Matriz de variancias e covariancias e matriz de correlações amostrais:**
+
+\begin{equation*}
+\bold{\Sigma} = 
+\begin{pmatrix}
+  220.31 & 206.71 & 196.24 & 193.31 & 152.71 \\ 
+  206.71 & 246.22 & 224.79 & 221.27 & 179.23 \\ 
+  196.24 & 224.79 & 286.21 & 257.77 & 222.68 \\ 
+  193.31 & 221.27 & 257.77 & 334.45 & 285.23 \\ 
+  152.71 & 179.23 & 222.68 & 285.23 & 347.43 \\ 
+\end{pmatrix}
+% \quad
+\bold{D} =
+\begin{pmatrix}
+  1.00 & 0.89 & 0.78 & 0.71 & 0.55 \\ 
+  0.89 & 1.00 & 0.85 & 0.77 & 0.61 \\ 
+  0.78 & 0.85 & 1.00 & 0.83 & 0.71 \\ 
+  0.71 & 0.77 & 0.83 & 1.00 & 0.84 \\ 
+  0.55 & 0.61 & 0.71 & 0.84 & 1.00 \\ 
+\end{pmatrix}
+\end{equation*}
+
+A partir das covariâncias observa-se que há um aumento da variabilidade dos dados coletados nas últimas semanas. Em concordância com as informações contidas nos boxplots.
+
+Considerando as correlações, estas sugerem forte ou moderada correlação entre as medidas. Observa-se também que as correlações diminuem com as últimas medidas tomadas, possivelmente consequência dos dados faltantes.
+
+## Modelagem
+
 # MODELO NORMAL INDEPENDENTE HOMOCEDASTICO
+
+Vamos considerar o seguinte modelo:
+    
+$$Y_{it} = \beta _{0t} + \beta _1x_{1i} + \beta _{2t}x_{2i} + \xi _{it}, \qquad (3)$$
+\begin{itemize}
+\item $Y_{it}$ é o valor da qualidade da visão medido no paciente i (i = 1, ..., 240) no tempo t (t = 1, 2, 3, 4, correspondendo ao valores 4, 12, 24 e 52 semanas, respectivamente).
+
+\item $x_{1i}$ é valor medido inicialmente da qualidade da visão.
+
+\item $x_{2i}$ é o indicador do tratamento (0 se placebo e 1 caso contrário).
+\end{itemize}
+
+Interpretação dos parâmetros
+
+\begin{itemize}
+  \item $\beta _{0t}$ representa o intercepto específico para cada tempo de medição, ou seja o valor esperado de $Y_{it}$ quando as covariáveis $x_{1i}$ e $x_{2i}$ são simultaneamente iguais a zero.
+    
+  \item $\beta _1$ é o incremento positivo ou negativo no valor esperado de $Y_{it}$  devido a variação em uma unidade da qualidade da visão inicial, fixada a covariável $x_{2i}$.
+    
+  \item $\beta _{2t}$ é o incremento positivo ou negativo no valor esperado de $Y_{it}$ específico para cada tempo de medição, fixada a covariável $x_{1i}$, ou seja é o efeito causado pelo tratamento proposto ao longo das semanas.   
+    
+  \item $\xi _{it}$ representa o erro aleatório, tal que $\xi _{it} \overset{\small{iid}}{\sim} \cal{N}(\text{0}, \sigma ^\text{2}) \ \forall$ i e t.
+\end{itemize}
+
+\begin{itemize}
+\item \textbf{Observação}: Como atualmente ainda não há uma cura para DMRI, é pouco provável que um indivíduo que chegue com $x_{1i} = 0$ no início do estudo, ou seja com sua qualidade de visão nula venha a ter uma medição posterior positiva. 
+\item Junto a isso desconsideraremos $\beta _{0}$, um intercepto geral no ajuste do modelo.
+\end{itemize}
 
 ```{r,warning=FALSE,message=FALSE}
 # Ajuste do modelo Normal Independente Homocedástico
@@ -139,10 +299,59 @@ summ$sigma
 confint(lm6.1)
 ```
 
+\begin{frame}{Modelo Linear Normal Homocedástico}
+    \begin{table}
+    \centering
+    \resizebox{10cm}{!}{
+    \begin{tabular}{cccccc}
+    \multicolumn{6}{c}{\textbf{Ajuste do Modelo, estimativas pontuais e intervalares}} \\
+    \hline
+    \textbf{Parâmetros} & \textbf{Estimativa} & \textbf{EP} & \textbf{Estat-t} & \textbf{IC(95\%)} &  \textbf{p-valor} \\
+    $\beta _1$ & 0.83 & 0.03 & 29.21 & [0,77 ; 0,89] & $<$ 2.2e-16 \\
+    $\beta _{01}$ & 8.08 & 1.94 & 4.16 & [4,26 ; 11,89] & 3.6e-05 \\
+    $\beta _{02}$ & 7.08 & 1.94 & 3.65 & [3,27 ; 10,89] & $<$ 0.001 \\
+    $\beta _{03}$ & 3.63 & 1.95 & 1.86 & [-0,20 ; 7,46] & 0.063 \\
+    $\beta _{04}$ & -1.75 & 1.99 & -0.88 & [-5,65 ; 2,16] & 0.380 \\
+    $\beta _{21}$ & -2.35 & 1.63 & -1.44 & [-5,55 ; 0,84] & 0.149 \\
+    $\beta _{22}$ & -3.71 & 1.64 & -2.26 & [-6,93 ; -0,48] & 0.024 \\
+    $\beta _{23}$ & -3.45 & 1.69 & -2.04 & [-6,77 ; -0,12] & 0.042 \\
+    $\beta _{24}$ & -4.47 & 1.78 & -2.52 & [-7,96 ; -0,98] & 0.012 \\
+    $\sigma$ & 12.38 & & & & \\
+    \hline
+    \end{tabular}
+    }
+    \caption{Estimativas pontuais dos parâmetros.}
+\end{table}
+
+Dadas as estimativas dos efeitos do tratamento serem negativas isso favorece  os efeitos do placebo, ou seja o placebo tem melhores resultados que o tratamento proposto. \\
+    $R^2$:  0,9432 \ e \ $R^2$ ajustado :  0,9426
+
 ```{r,warning=FALSE,message=FALSE}
 # ANOVA
 anova(lm6.1)
 ```
+
+\begin{table}
+  \centering
+  \resizebox{10cm}{!}{
+  \begin{tabular}{cccccc}
+  \multicolumn{6}{c}{\textbf{Análise de Variância}} \\
+  \hline
+      \textbf{FV} & \textbf{GL} & \textbf{SQ} & \textbf{QM} &  \textbf{Estat-F} & \textbf{p-valor} \\
+      Est. Inic. & 1 & 2165776 & 2165776 & 14138.99 & $<$ 2.2e-16 \\
+      Tempo & 4 & 14434 & 3608 & 23.56 & $<$ 2.2e-16 \\
+      Tratamento & 4 & 2703 & 676 & 4.41 & 0.002 \\
+      \cline{1-4}
+      Resíduos & 858 & 131426 & 153 & & \\
+      \hline
+  \end{tabular}
+  }
+  \caption{Análise de Variância com teste - F sequencial.}
+\end{table}
+    
+\begin{itemize}
+    \item Visto que há significância no teste-F isso indica que existe efeito no tratamento com a variação do tempo. 
+\end{itemize}
 
 ```{r,warning=FALSE,message=FALSE}
 # Análise de Resíduos
@@ -157,91 +366,8 @@ envelnorm(lm6.1) #checa normalidade
 cook_hat(lm6.1) #análise de influência e alavancagem
 ```
 
-# MODELO MISTO FREQUENTISTA
+* Como o modelo proposto não leva em consideração as correlações entre as observações da qualidade visual de cada indivíduo, nem a heterocedasticidade que há entre as diferentes medidas ao longo do tempo, ele não deve ser considerado como base para inferências. 
 
-```{r,warning=FALSE,message=FALSE}
-# Ajusta o modelo misto homocedástico, estimativas (Max. Ver. Sim. Restrita), erros padrão, graus de liberdade, t-value, p-value
-lme.form <- formula(visual ~ visual0 + time + treat.f + treat.f:time)
-
-(fm16.1 <- lme(lme.form, random = ~1|subject, data = armd))
-printCoefmat(summary(fm16.1)$tTable, has.Pvalue = T, P.values = T)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Calcula a matriz de variâncias e covariâncias condicional
-getVarCov(fm16.1, type = "conditional", individual = "2")
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Calcula a matriz de variâncias e covariâncias 
-fm16.1cov <- getVarCov(fm16.1, type = "marginal", individual = "2")
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Calcula a matriz de covariâncias
-cov2cor(fm16.1cov[[1]])
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Medida Lesaffre-Verbeke padronizada vs indices
-#residdiag.nlme(fm16.1, limit =2,  plotid = 4)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Resı́duos Marginais padronizados vs Valores ajustados e histograma correspondente
-#residdiag.nlme(fm16.1, limit =2, plotid = 1)
-```
-
-```{r,warning=FALSE,message=FALSE}
-#Plota Resı́duos Condicionais padronizados vs Valores ajustados
-#residdiag.nlme(fm16.1, limit =2, plotid = 5)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# QQ plot (Normal) e histograma dos resı́duos condicionais minimamente confundidos padronizados
-#residdiag.nlme(fm16.1, limit =2, plotid = 6)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# QQ plot (Qui-quadrado) para a distância de Mahalanobis
-#residdiag.nlme(fm16.1, limit =2, plotid = 3)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Distância de Mahalanobis padronizada vs indices
-#residdiag.nlme(fm16.1, limit =2, plotid = 2)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Alavancagem conjunta generalizada [L1i(jj)] vs indices
-#residdiag.nlme(fm16.1, limit =2, plotid = 14)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Alavancagem conjunta generalizada [L2i(jj)] vs indices
-#residdiag.nlme(fm16.1, limit =2, plotid = 15)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Distância de Cook condicional 1 (D1i) vs ı́ndices
-#residdiag.nlme(fm16.1, limit =2, plotid = 8)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Distância de Cook condicional 2 (D2i) vs ı́ndices
-#residdiag.nlme(fm16.1, limit =2, plotid = 9)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Distância de Cook condicional 3 (D3i) vs ı́ndices
-#residdiag.nlme(fm16.1, limit =2, plotid = 10)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Calcula os valores das estatísticas de comparação de modelos
-calc.estat.mod.comp.MRNLH(lm6.1) # modelo normal independente homocedástico
-calc.estat.mod.comp.MRNLH(fm16.1) # modelo misto
-```
 
 # MODELO MISTO BAYESIANO
 
@@ -250,7 +376,98 @@ Como um exemplo da abordagem Bayesiana, suponha que temos interesse no valor de 
 Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$. Então o Teorema de Bayes afirma que a probabilidade de $\theta$ ser igual a $\theta_i$, dado novas observações, é 
 $$\pi(\theta_i|dados) = \frac{\pi(dados|\theta_i)p(\theta_i)}{\sum_{j=1}^n \pi(data|\theta_j)\pi(\theta_j)}, \quad (??)$$
 
+Vamos considerar agora o seguinte modelo:
 
+  $$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \beta _4 x_{2it} x_{3i} + b_{0i} + \xi _{it},  \qquad  (4)$$
+
+\begin{itemize}
+    \item $Y_{it}$ é a qualidade da visão do paciente i (i = 1, ..., 240) no tempo t (t = 1, 2, 3, 4, correspondendo aos valores 4º, 12º, 24º e 52º semana, respectivamente).\\
+    \item $x_{1i}$ é o valor inicial da qualidade da visão. \\
+    \item $x_{2it}$ é o tempo t de medição no paciente i. \\
+    \item $x_{3i}$ é o indicador do tratamento, 0 se placebo e 1 caso contrário. \\
+    \item $x_{2it} x_{3i}$ é a interação entre as duas covariáveis. \\
+\end{itemize}
+
+\begin{itemize}
+    \item $\beta _0$ é o intercepto geral.
+    \item $\beta _1$ é o incremento positivo ou negativo no valor esperado de $Y_{it}$ quando variado em uma unidade o valor inicial da qualidade da visão.
+    \item $\beta _2$ é o incremento positivo ou negativo na valor esperado de $Y_{it}$, quando acrescido o tempo em uma semana entre as que foram observadas.
+    \item $\beta _3$ é o efeito geral positivo ou negativo no valor esperado de $Y_{it}$ causado pelo tratamento.
+    \item $\beta _4$ é o incremento positivo ou negativo sobre o valor esperado de $Y_{it}$, gerado pela variação do tempo em uma semana entre as que foram observadas sobre o paciente i que estava sob tratamento.
+\end{itemize}
+
+\begin{itemize}
+    \item $b_{0i}$ é o efeito aleatório específico para cada paciente. Tal que $b_{0i} \sim \cal{N}(\text{0}, \ \text{d}_{\text{11}}) \ \forall$ i.
+    \item $\xi _{it}$ é o erro aleatório. Tal que  $\xi _{it} \overset{\small{iid}}{\sim} \cal{N}(\text{0}, \ \sigma ^\text{2}) \ \forall$ i e t.
+    \item $b_{0i}$ representa uma variação especifica do $\beta _0$ para cada paciente.
+\end{itemize}
+
+Em notação matricial, o modelo para o sujeito i com o conjunto completo das quatro medidas da qualidade da visão é expresso por:
+$$
+\begin{pmatrix}
+Y_{i1} \\
+Y_{i2} \\
+Y_{i3} \\
+Y_{i4} \\
+\end{pmatrix} 
+=  
+\begin{pmatrix}
+1 & x_{1i} & 4 & x_{3i} & 4x_{3i}\\ 
+1 & x_{1i} & 12 & x_{3i} & 12x_{3i}\\
+1 & x_{1i} & 24 & x_{3i} & 24x_{3i}\\
+1 & x_{1i} & 52 & x_{3i} & 52x_{3i}\\
+\end{pmatrix}
+\begin{pmatrix}
+\beta_0 \\
+\beta_1 \\
+\beta_2 \\
+\beta_3 \\
+\beta_4 \\
+\end{pmatrix} +
+\begin{pmatrix}
+1 \\
+1 \\
+1 \\
+1 \\
+\end{pmatrix} b_{0t}
++ \begin{pmatrix}
+\xi_{i1} \\
+\xi_{i2} \\
+\xi_{i3} \\
+\xi_{i4} \\
+\end{pmatrix}
+$$ 
+
+$$ \textbf{y}_i = \textbf{X}_i \boldsymbol{\beta} + \textbf{Z}_i \textbf{b}_i + \boldsymbol{\xi}_i $$
+
+Com $\boldsymbol{\cal{D}} \equiv d_{\text{11}}$ e $\boldsymbol{\cal{R}_\text{i}} \equiv \sigma^\text{2}\boldsymbol{I}_\text{4}$, no qual \textbf{I}$_4$ é a matrix identidade 4 x 4.
+
+Logo, a parte aleatória do modelo 4, considerando a matriz de variâncias e covariâncias marginal para o indivíduo i com as 4 observações é dada por:
+
+$$\boldsymbol{\cal{V}}_ \text{i} \equiv \boldsymbol{Z_} \text{i} \boldsymbol{\cal{D}} \boldsymbol{Z}_\text{i}^{\boldsymbol{'}} + \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_\text{4}$$
+    
+$$= \begin{pmatrix}
+1 \\
+1 \\
+1 \\
+1 \\
+\end{pmatrix} d_{\text{11}} \begin{pmatrix}
+1 & 1 & 1 & 1
+\end{pmatrix} + \begin{pmatrix}
+\sigma^\textbf{2} & 0 & 0 & 0 \\
+0 & \sigma^\textbf{2} & 0 & 0 \\
+0 & 0 & \sigma^\textbf{2} & 0 \\
+0 & 0 & 0 & \sigma^\textbf{2} \\
+\end{pmatrix}$$
+
+$$= \begin{pmatrix}
+\sigma^{\textbf{2}} + d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} \\
+d_{\textbf{11}} & \sigma^{\textbf{2}} + d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} \\
+d_{\textbf{11}} & d_{\textbf{11}} & \sigma^{\textbf{2}} + d_{\textbf{11}} & d_{\textbf{11}} \\
+d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} & \sigma^{\textbf{2}} + d_{\textbf{11}} \\
+\end{pmatrix}$$
+
+Pela estrutura da matriz de variâncias e covariâncias temos um coeficiente de correlação comum para todos os pares de variáveis $\varrho = d_\text{11} / (\sigma^2 + d_\text{11})$. Pelo fato do $d_\text{11}$ ser não negativo, implica que $\varrho$ é também não negativo.
 
 ```{r include=FALSE}
 # MAKE DESIGN MATRIX
@@ -279,4 +496,13 @@ matrixFit <- stan(file = "matrixModel.stan",
                   iter = 2000, chains = 4)
 ```
 
+```{r resumo_bayes}
+estimate_table <- round(summary(matrixFit,pars = c("beta","sigma_e","sigma_p"))$summary,2)
+kable(estimate_table)
+```
 
+```{r convergencia}
+traceplot(matrixFit,pars=c("beta","sigma_e","sigma_p"))
+```
+
+# Referências
