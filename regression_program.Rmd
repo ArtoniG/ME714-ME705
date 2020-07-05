@@ -83,6 +83,8 @@ The Stan project develops a probabilistic programming language that implements f
 
 # Introdução
 
+A degeneração macular relacionada à idade (DMRI) é uma doença atualmente sem cura que ocorre em uma parte da retina chamada mácula e que leva a perda progressiva da visão central. A DMRI é uma alteração muito comum em pessoas com mais de 55 anos, sendo a causa mais frequente de baixa acuidade visual nessa faixa etária. Com o intuito de avaliar se um novo medicamento para DMRI tem poder competitivo com o principal existente atualmente, iremos comparar por meio de modelos de regressão linear a qualidade da acuidade visual de pacientes com DMRI sob ambos tratamentos durante aproximadamente dois meses.
+
 MOTIVAÇÃO SOBRE O MODELO:
 
 * Modelo com efeitos fixos e aleatórios.
