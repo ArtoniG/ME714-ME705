@@ -1,8 +1,8 @@
 ---
 title: "Modelos de Regressão Linear Mistos para dados discretos: Uma abordagem utilizando MCMC através do Stan integrado ao R."
 author: 
-  - Guilherme Artoni - RA160318
-  - Citzen4 - RAXXXXXX
+  - Guilherme Artoni - RA 160318
+  - Felipe Vieira - RA 160424
   - Student - RAXXXXXX
   - Malba Tahan - RAXXXXXX
 bibliography: referencia.bib
