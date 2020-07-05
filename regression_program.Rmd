@@ -43,7 +43,9 @@ header-includes:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE,
                       warning = FALSE,error = FALSE,
-                      fig.align = "center")
+                      fig.align = "center",
+                      fig.width = 5,
+                      fig.height = 4)
 options(knitr.table.format = "latex")
 ```
 
@@ -292,41 +294,40 @@ lm.form <- formula(visual ~ -1 + visual0 + time.f + treat.f:time.f)
 lm6.1 <- lm(lm.form, armd)
 ```
 
-```{r,warning=FALSE,message=FALSE}
+```{r,include=FALSE}
 # Estimativas, Erros Padrão, t-value, p-value, coef. de determinação R² e R² ajustado e interv. conf.
 (summ <- summary(lm6.1))
 summ$sigma
 confint(lm6.1)
 ```
 
-\begin{frame}{Modelo Linear Normal Homocedástico}
-    \begin{table}
-    \centering
-    \resizebox{10cm}{!}{
-    \begin{tabular}{cccccc}
-    \multicolumn{6}{c}{\textbf{Ajuste do Modelo, estimativas pontuais e intervalares}} \\
-    \hline
-    \textbf{Parâmetros} & \textbf{Estimativa} & \textbf{EP} & \textbf{Estat-t} & \textbf{IC(95\%)} &  \textbf{p-valor} \\
-    $\beta _1$ & 0.83 & 0.03 & 29.21 & [0,77 ; 0,89] & $<$ 2.2e-16 \\
-    $\beta _{01}$ & 8.08 & 1.94 & 4.16 & [4,26 ; 11,89] & 3.6e-05 \\
-    $\beta _{02}$ & 7.08 & 1.94 & 3.65 & [3,27 ; 10,89] & $<$ 0.001 \\
-    $\beta _{03}$ & 3.63 & 1.95 & 1.86 & [-0,20 ; 7,46] & 0.063 \\
-    $\beta _{04}$ & -1.75 & 1.99 & -0.88 & [-5,65 ; 2,16] & 0.380 \\
-    $\beta _{21}$ & -2.35 & 1.63 & -1.44 & [-5,55 ; 0,84] & 0.149 \\
-    $\beta _{22}$ & -3.71 & 1.64 & -2.26 & [-6,93 ; -0,48] & 0.024 \\
-    $\beta _{23}$ & -3.45 & 1.69 & -2.04 & [-6,77 ; -0,12] & 0.042 \\
-    $\beta _{24}$ & -4.47 & 1.78 & -2.52 & [-7,96 ; -0,98] & 0.012 \\
-    $\sigma$ & 12.38 & & & & \\
-    \hline
-    \end{tabular}
-    }
-    \caption{Estimativas pontuais dos parâmetros.}
+
+  \begin{table}
+  \centering
+  \resizebox{10cm}{!}{
+  \begin{tabular}{cccccc}
+  \multicolumn{6}{c}{\textbf{Ajuste do Modelo, estimativas pontuais e intervalares}} \\
+  \hline
+  \textbf{Parâmetros} & \textbf{Estimativa} & \textbf{EP} & \textbf{Estat-t} & \textbf{IC(95\%)} &  \textbf{p-valor} \\
+  $\beta _1$ & 0.83 & 0.03 & 29.21 & [0,77 ; 0,89] & $<$ 2.2e-16 \\
+  $\beta _{01}$ & 8.08 & 1.94 & 4.16 & [4,26 ; 11,89] & 3.6e-05 \\
+  $\beta _{02}$ & 7.08 & 1.94 & 3.65 & [3,27 ; 10,89] & $<$ 0.001 \\
+  $\beta _{03}$ & 3.63 & 1.95 & 1.86 & [-0,20 ; 7,46] & 0.063 \\
+  $\beta _{04}$ & -1.75 & 1.99 & -0.88 & [-5,65 ; 2,16] & 0.380 \\
+  $\beta _{21}$ & -2.35 & 1.63 & -1.44 & [-5,55 ; 0,84] & 0.149 \\
+  $\beta _{22}$ & -3.71 & 1.64 & -2.26 & [-6,93 ; -0,48] & 0.024 \\
+  $\beta _{23}$ & -3.45 & 1.69 & -2.04 & [-6,77 ; -0,12] & 0.042 \\
+  $\beta _{24}$ & -4.47 & 1.78 & -2.52 & [-7,96 ; -0,98] & 0.012 \\
+  $\sigma$ & 12.38 & & & & \\
+  \hline
+  \end{tabular}
+  }
+  \caption{Estimativas pontuais dos parâmetros.}
 \end{table}
 
-Dadas as estimativas dos efeitos do tratamento serem negativas isso favorece  os efeitos do placebo, ou seja o placebo tem melhores resultados que o tratamento proposto. \\
-    $R^2$:  0,9432 \ e \ $R^2$ ajustado :  0,9426
+Dadas as estimativas dos efeitos do tratamento serem negativas isso favorece  os efeitos do placebo, ou seja o placebo tem melhores resultados que o tratamento proposto. $R^2$:  0,9432 \ e \ $R^2$ ajustado :  0,9426
 
-```{r,warning=FALSE,message=FALSE}
+```{r,include=FALSE}
 # ANOVA
 anova(lm6.1)
 ```
@@ -403,7 +404,7 @@ Vamos considerar agora o seguinte modelo:
 \end{itemize}
 
 Em notação matricial, o modelo para o sujeito i com o conjunto completo das quatro medidas da qualidade da visão é expresso por:
-$$
+\begin{equation*}
 \begin{pmatrix}
 Y_{i1} \\
 Y_{i2} \\
@@ -436,7 +437,7 @@ Y_{i4} \\
 \xi_{i3} \\
 \xi_{i4} \\
 \end{pmatrix}
-$$ 
+\end{equation*}
 
 $$ \textbf{y}_i = \textbf{X}_i \boldsymbol{\beta} + \textbf{Z}_i \textbf{b}_i + \boldsymbol{\xi}_i $$
 
@@ -444,9 +445,10 @@ Com $\boldsymbol{\cal{D}} \equiv d_{\text{11}}$ e $\boldsymbol{\cal{R}_\text{i}}
 
 Logo, a parte aleatória do modelo 4, considerando a matriz de variâncias e covariâncias marginal para o indivíduo i com as 4 observações é dada por:
 
-$$\boldsymbol{\cal{V}}_ \text{i} \equiv \boldsymbol{Z_} \text{i} \boldsymbol{\cal{D}} \boldsymbol{Z}_\text{i}^{\boldsymbol{'}} + \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_\text{4}$$
+$$\boldsymbol{\cal{V}}_\text{i} \equiv \boldsymbol{Z}_\text{i} \boldsymbol{\cal{D}} \boldsymbol{Z}_\text{i}^{\boldsymbol{'}} + \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_\text{4}$$
     
-$$= \begin{pmatrix}
+\begin{equation*}
+= \begin{pmatrix}
 1 \\
 1 \\
 1 \\
@@ -458,14 +460,17 @@ $$= \begin{pmatrix}
 0 & \sigma^\textbf{2} & 0 & 0 \\
 0 & 0 & \sigma^\textbf{2} & 0 \\
 0 & 0 & 0 & \sigma^\textbf{2} \\
-\end{pmatrix}$$
+\end{pmatrix}
+\end{equation*}
 
-$$= \begin{pmatrix}
+\begin{equation*}
+= \begin{pmatrix}
 \sigma^{\textbf{2}} + d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} \\
 d_{\textbf{11}} & \sigma^{\textbf{2}} + d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} \\
 d_{\textbf{11}} & d_{\textbf{11}} & \sigma^{\textbf{2}} + d_{\textbf{11}} & d_{\textbf{11}} \\
 d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} & \sigma^{\textbf{2}} + d_{\textbf{11}} \\
-\end{pmatrix}$$
+\end{pmatrix}
+\end{equation*}
 
 Pela estrutura da matriz de variâncias e covariâncias temos um coeficiente de correlação comum para todos os pares de variáveis $\varrho = d_\text{11} / (\sigma^2 + d_\text{11})$. Pelo fato do $d_\text{11}$ ser não negativo, implica que $\varrho$ é também não negativo.
 
@@ -498,11 +503,48 @@ matrixFit <- stan(file = "matrixModel.stan",
 
 ```{r resumo_bayes}
 estimate_table <- round(summary(matrixFit,pars = c("beta","sigma_e","sigma_p"))$summary,2)
-kable(estimate_table)
+kable(estimate_table,
+      align = "c",
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = "HOLD_position")
 ```
 
 ```{r convergencia}
-traceplot(matrixFit,pars=c("beta","sigma_e","sigma_p"))
+traceplot(matrixFit,pars=c("sigma_p"))
 ```
+
+```{r}
+D <- diag(round(sqrt(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2)),2),nrow = 4)
+S <- matrix(round(estimate_table["sigma_p","mean"]**2,2),ncol = 4,nrow = 4)
+diag(S) <- round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)
+Dinv <- solve(D)
+corr_mtrx <- round(Dinv%*%S%*%Dinv,2)
+```
+
+
+**Matrizes de Variâncias e Covariâncias Condicionais:**
+$$\begin{pmatrix}
+`r round(estimate_table["sigma_e","mean"]**2,2)` & 0 & 0 & 0 \\
+0 & `r round(estimate_table["sigma_e","mean"]**2,2)` & 0 & 0 \\
+0 & 0 & `r round(estimate_table["sigma_e","mean"]**2,2)` & 0 \\
+0 & 0 & 0 & `r round(estimate_table["sigma_e","mean"]**2,2)` \\
+\end{pmatrix}$$
+
+**Matrizes de Variâncias e Covariâncias Marginais:**
+$$\begin{pmatrix}
+`r round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` \\
+`r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` \\
+`r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` \\
+`r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)` \\
+\end{pmatrix}$$
+
+**Matrizes de Correlações:**
+$$\begin{pmatrix}
+`r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` \\
+`r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` \\
+`r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` \\
+`r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` \\
+\end{pmatrix}
+$$
 
 # Referências
