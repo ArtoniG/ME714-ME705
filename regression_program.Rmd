@@ -232,6 +232,8 @@ varx <- var(visual.x, use = "complete.obs")
 
 #bmatrix(varx)
 ```
+A partir da matriz de variância e covariância $\bold{\Sigma}$ observa-se que há um aumento da variabilidade dos dados coletados nas últimas semanas, em concordância com as informações contidas nos boxplots. Considerando as correlações $\bold{D}$, estas sugerem uma forte ou moderada correlação entre os tratamentos e uma diminuição entre as últimas medidas tomadas, possivelmente consequência dos dados faltantes.
+
 
 * **Matriz de variancias e covariancias e matriz de correlações amostrais:**
 
@@ -255,9 +257,6 @@ varx <- var(visual.x, use = "complete.obs")
 \end{pmatrix}
 \end{equation*}
 
-A partir das covariâncias observa-se que há um aumento da variabilidade dos dados coletados nas últimas semanas. Em concordância com as informações contidas nos boxplots.
-
-Considerando as correlações, estas sugerem forte ou moderada correlação entre as medidas. Observa-se também que as correlações diminuem com as últimas medidas tomadas, possivelmente consequência dos dados faltantes.
 
 ## Modelagem
 
