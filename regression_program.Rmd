@@ -159,6 +159,10 @@ flst <- list(time.f, treat.f)
 tN <- tapply(visual, flst, FUN = function(x) length(x[!is.na(x)]))
 ```
 
+O experimento iniciou-se com 240 pacientes sendo que 119 receberam um placebo e 121 receberam a droga. Com o passar das semanas a quantidade de pessoas no estudo foram diminuindo, isso ocorreu por conta de efeitos colaterais sentidos em ambos os tratamentos. Por conta disso, ao fim do experimento obtivemos alguns dados faltantes conforme mostra a tabela 1. 
+
+
+
 \begin{table}
     \centering
     \begin{tabular}{ccc}
@@ -187,6 +191,8 @@ nms2 <- rep(c("n", "Mean", "Mdn"), rep(2,3))
 colnames(res) <- paste(nms1, nms2, sep = ":")
 #res
 ```
+Podemos observar um decrescimento ao longo do tempo das médias e medianas da medida de qualidade da visão  conforme mostra a figura Y (BOXPLOT). Nota-se também um aumento da variabilidade dos dados coletados nas últimas semanas, o aumento no número de dados faltantes pode ser uma possível causa para o crescimento dessa variabilidade. Há também um forte indício de simetria nas distribuições de ambos tratamentos por conta de que médias e medianas apresentaram valores próximos conforme indicado na tabela 2.
+
 
 \begin{table}
     \centering
@@ -216,11 +222,6 @@ xlims <- c("Base", "4\nwks", "12\nwks", "24\nwks", "52\nwks")
 update(bw1, xlim = xlims, pch = "|")
 ```
 
-* Há um forte indício de simetria nas distribuições por médias e medianas apresentarem valores próximos.
-    
-* Podemos observar que o decrescimento das médias e medianas ao longo do tempo é também observado nos boxplots.
-    
-* Nota-se nos boxplots um aumento da variabilidade dos dados que foram coletados nas últimas semanas. Pode ser que o aumento no número de dados faltantes tenha ocasionado isso.
 
 ```{r,warning=FALSE,message=FALSE}
 # Calcula as matrizes de variâncias e covariâncias e de correlações amostrais
