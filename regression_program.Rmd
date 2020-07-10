@@ -386,14 +386,25 @@ ou seja, a distribuição a posteriori de vários parâmetros dado um conjunto d
 
 ## INTRODUÇÃO ÀS CADEIAS DE MARKOV
 
-Considere uma sequência de variáveis aleatórias discretas $\{X_0,X_1,X_2,\dots\}$ e espaço de estados denotado por S=$\{s_1,s_2,\dots,s_k\}$. A sequência de variáveis aleatórias $\{X_0,X_1,X_2,\dots\}$ é uam Cadeia de Markov (CM), se 
+Considere uma sequência de variáveis aleatórias discretas $\{X_0,X_1,X_2,\dots\}$ e espaço de estados denotado por S=$\{s_1,s_2,\dots,s_k\}$. A sequência de variáveis aleatórias $\{X_0,X_1,X_2,\dots\}$ é uma Cadeia de Markov (CM), se 
 $$p(X_t | X_{t-1},X_{t-2},\dots,X_{0})=p(X_t | X_{t-1}),$$
 para t$=1,2,\dots,$ ou seja, dada $X_{t-1}$, a distribuição de $X_{t}$ independe de suas predecessoras, $X_{t-2},X_{t-3}, \dots$.
-Em um instante t qualquer, a probabilidade que o processo mude de um estado $X_{t} = s_i$ para um estado $X_{t+1} = s_j$ é dada pela matriz de transição, $P=\{p_{ij}\}$. A restrição natural sobre a matriz de transição é que a soma das linhas seja 1, $\sum_j p_{ij} = 1$, para todo $i$.
+Em um instante t qualquer, a probabilidade que o processo mude de um estado $X_{t} = s_i$ para um estado $X_{t+1} = s_j$ é dada pela matriz de transição, $P=\{p_{ij}\}$. A restrição natural sobre a matriz de transição é que a soma das linhas seja 1, $\sum_j p_{ij} = 1$, para todo $i$.  
+Uma CM admite uma distribuição de equilíbrio $\boldsymbol{\pi}$ se existir $\boldsymbol{\pi}$ tal que $\boldsymbol{\pi} = \boldsymbol{\pi} P$.
 
-## O AMOSTRADOR DE GIBBS
+**IRREDUTIBILIDADE**
 
-O amostrador de Gibbs é um método para aproximar uma distribuição multivariada tomando somente amostras de distribuições univariadas. O benefício deste método com Inferência Bayesiana é que torna relativamente fácil amostrar de uma distribuição a posteriori multivariada até mesmo quando o número de parâmetros envolvidos é muito grande.
+Uma CM, cujas as variáveis aleatórias são discretas, é dita irredutível se for uma cadeia em que partindo-se de um estado qualquer, pode-se atingir qualquer estado, inclusive o inicial, em um número finito de transições.
+
+**REVERSIBILIDADE**
+
+Uma CM é dita reversível se a probabilidade de estar em um estado $s_i$ e mover-se para $s_j$ é igual à probabilidade de estar no estado $s_j$ e mover-se para o estado $s_i$, ou seja,
+$$\boldsymbol{\pi}(i)p(i,j) = \boldsymbol{\pi}(j)p(j,i)$$
+A denominação reversível se deve ao fato que, atendida a condição acima, a mesma lei de transição se aplica à cadeia tanto no sentido natural de evolução do tempo, $t, t+1, t+2, \dots,$ quanto no sentido contrário $t, t-1, t-2, \dots$. A reversibilidade de uma CM está associada ao fato da mesma admitir uma distribuição de equilíbrio.
+
+## AMOSTRADOR DE GIBBS
+
+O Amostrador de Gibbs (AG) é um método para aproximar uma distribuição multivariada tomando somente amostras de distribuições univariadas. O benefício deste método com Inferência Bayesiana é que torna relativamente fácil amostrar de uma distribuição a posteriori multivariada até mesmo quando o número de parâmetros envolvidos é muito grande.
 
 Suponha que a distribuição a posteriori tenha função de densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para os $p$ parâmetros $\theta_1, \theta_2, \dots,\theta_p$ e seja $\pi(\theta_i | \theta_1, \dots, \theta_{i-1}, \theta_{i+1}, \dots,\theta_p)$ a função densidade condicional para $\theta_i$ dado os valores dos outros parâmetros. O problema então é gerar um grande número de amostras aleatórias da distribuição a posteriori com o objetivo de aproximar a própria distribuição e  distribuições de várias funções dos parâmetros. Isto é feito tomando arbitrariamente valores iniciais $\{\theta_1(0), \theta_2(0), \dots,\theta_p(0)\}$ para os $p$ parâmetros e em seguida mudá-los um a um selecionando novos valores como segue:
 $$\theta_1(1) \quad \text{é escolhido de} \quad \pi(\theta_1 | \theta_2(0), \theta_3(0), \dots,\theta_p(0))$$
@@ -401,13 +412,47 @@ $$\theta_2(1) \quad \text{é escolhido de} \quad \pi(\theta_2 | \theta_1(1), \th
 $$\theta_3(1) \quad \text{é escolhido de} \quad \pi(\theta_3 | \theta_1(1), \theta_2(1), \theta_4(0) \dots,\theta_p(0))$$
 $$\vdots$$
 $$\theta_p(1) \quad \text{é escolhido de} \quad \pi(\theta_p | \theta_1(1), \theta_2(1), \dots,\theta_{p-1}(1))$$
-Nesse ponto todos os valores iniciais foram substituídos, o que representa um ciclo completo do algoritmo. O processo então é repetido muitas vezes produzindo a sequência $\{\theta_1(1), \theta_2(1), \dots,\theta_p(1)\}, \{\theta_1(2), \theta_2(2), \dots,\theta_p(2)\}, \dots, \{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ a qual é chamada de Cadeia de Markov, pois em cada etapa do algoritmo a mudança é feita dependendo apenas do valor atual de $\theta$.
+Nesse ponto todos os valores iniciais foram substituídos, o que representa um ciclo completo do algoritmo. O processo então é repetido muitas vezes produzindo a sequência $\{\theta_1(1), \theta_2(1), \dots,\theta_p(1)\}, \{\theta_1(2), \theta_2(2), \dots,\theta_p(2)\}, \dots, \{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ a qual caracteriza uma CM, pois em cada etapa do algoritmo a mudança é feita dependendo apenas do valor atual de $\theta$.
 
-## VANTAGENS E DESVANTAGENS DO MÉTODO AMOSTRADOR DE GIBBS
+## METROPOLIS-HASTINGS
+
+Considere uma distribuição $\pi$ da qual se deseja gerar uma amostra através de uma CM. De acordo com @gamerman deve-se construir um núcleo de transição $p(\theta,\phi)$ de forma que $\pi$ seja a distribuição de equilíbrio da cadeia. Uma forma simple de fazer isso é através de cadeias onde o núcleo $p$ satisfaça 
+$$\pi(\theta)p(\theta,\phi) = \pi(\phi)p(\phi,\theta), \quad \forall \quad (\theta,\phi) \quad (??)$$
+essa equação é também conhecida como equação de equílibrio detalhado. Embora não seja necessária, ela é suficiente para que $\pi$ seja a distribuição de equilíbrio da cadeia. Como vimos na seção ??? essa é a condição de reversibilidade da cadeia.  
+O núcleo $p(\theta,\phi)$ é constituído de 2 elementos: um núcleo de transição arbitrário $q(\theta,\phi)$ e uma probabilidade $\alpha(\theta,\phi)$ de forma que,
+$$p(\theta,\phi) = q(\theta,\phi)\alpha(\theta,\phi), \quad \text{se} \quad \theta \ne \phi$$
+Portanto, o núcleo de transição define uma densidade $p(\theta, .)$ para todos os valores diferentes de $\theta$. Consequentemente, resta uma probabilidade positiva da cadeia ficar em $\theta$ dada por
+$$p(\theta,\theta) = 1 - \int q(\theta,\phi)\alpha(\theta,\phi)\text{d}\phi$$
+Logo, o núcleo de transição define uma distribuição mista para o novo estado $\phi$ da cadeia. Para $\phi \ne \theta$ essa distribuição tem densidade e para $\phi = \theta$, essa distribuição atribui uma probabilidade positiva.  
+A expressão mais comum para a probabilidade de aceitação é 
+$$\alpha(\theta,\phi) = min\{1,\frac{\pi(\phi)\text{q}(\phi,\theta)}{\pi(\theta)\text{q}(\theta,\phi)}\}$$
+onde a razão que aparece na expressão é chamada de razão de teste.
+
+Em termos práticos isso significa que a simulação de uma amostra de $\pi$ usando a cadeia de Markov pode ser esquematizada da seguinte forma:
+
+i) inicialize o contador de iterações da cadeia $j = 1$ e tome um valor arbitrário para $\theta^{(0)}$;
+
+ii) mova a cadeia para um novo valor $\phi$ gerado da densidade $q(\theta^{(j-1)},.)$ ;
+
+iii) calcule a probabilidade de aceitação do movimento $\alpha(\theta^{(j-1)},\phi)$ . Se o movimento for aceito, $\theta^{(j)} = \phi$, caso contrário $\theta^{(j)} = \theta^{(j-1)}$ e a cadeia não se move;
+
+iv) mude o contador de $j$ para $j+1$ e  retorne ao item ii) até a convergência.
+
+A etapa iii) é realizada após a geração de uma quantidade uniforme $u \sim U(0,1)$ independente de todas as outras variáveis. Se $u \le \alpha$, o movimento é aceito e se $u > \alpha$ o movimento não é permitido. O núcleo de transição $q$ define apenas uma proposta de movimento que pode ou não ser confirmado por $\alpha$. Por esse motivo, $q$ é normalmente chamado de proposta e, quando considerado como uma densidade ou distribuição condicional $\text{q} (\theta, .)$ é chamado de densidade ou distribuição condicional proposta.  
+
+## CONEXÃO ENTRE AMOSTRADOR DE GIBBS E METROPOLIS-HASTINGS
+
+O AG pode ser visto como um caso particular do Metropolis-Hastings (MH) onde as distribuições geradoras de candidatos são as condicionais da distribuição de interesse e o candidato é aceito com probabilidade 1. No AG a cadeia está restrita a se mover paralelamente aos eixos enquanto em MH este movimento é livre quando a geração é feita em blocos. Isto se explica em função de no AG atualizarmos um elemento do vetor aleatório por vez, enquanto que no MH isto se faz em bloco.
+
+Considere a situação em que para um vetor aleatório com K elementos, sendo que alguns deles tem densidades condicionais bem definidas e fáceis de gerar, enquanto que os demais não tem esta  facilidade. Neste caso podemos fazer uso combinado do AG para as variáveis fáceis de gerar e do MH para as demais. Esta combinação recebe o nome de Metropolis-within-Gibbs.
+
+O procedimento Metropolis-within-Gibbs, combina aspectos interessantes de MH e AG, gerando direto da distribuição condicional quando for conveniente, caracterizando um passo do AG, e aplicando um passo MH quando a geração direta da condicional for difícil. 
+
+## VANTAGENS E DESVANTAGENS DO MÉTODO
 
 Dois fatores fazem este algoritmo útil. Primeiro que pode ser mostrado que $\{\theta_1(i), \theta_2(i), \dots,\theta_p(i)\}$ segue a distribuição com densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para valores grandes de $i$. Segundo que amostrar observações da distribuição condicional é frequentemente relativamente mais fácil, tornando o método de fácil implementação.
 
-Complicações aparecem por que os conjuntos sucessivos de valores amostrais geradores podem ser correlacionados, porém pode ser resolvido tomando somente valores a partir da r-ésima etapa da sequência, com r grande o suficiente para garantir que os valores tenham correlações negligenciáveis. Paralelamente podem ser geradas várias sequências diferentes com valores iniciais escolhidos aleatoriamente e somente os conjuntos de valores finais $\{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ serem mantidos e comparados.  
+Complicações aparecem por que os conjuntos sucessivos de valores amostrais geradores podem ser correlacionados, porém pode ser resolvido tomando somente valores a partir da r-ésima etapa da sequência, com r grande o suficiente para garantir que os valores tenham correlações negligenciáveis. Paralelamente podem ser geradas várias sequências diferentes com valores iniciais escolhidos aleatoriamente e somente os conjuntos de valores finais $\{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ serem mantidos e comparados. 
 
 # MODELO MISTO
 
