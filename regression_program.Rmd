@@ -83,47 +83,6 @@ The Stan project develops a probabilistic programming language that implements f
 
 A degeneração macular relacionada à idade (DMRI) é uma doença atualmente sem cura que ocorre em uma parte da retina chamada mácula e que leva a perda progressiva da visão central. A DMRI é uma alteração muito comum em pessoas com mais de 55 anos, sendo a causa mais frequente de baixa acuidade visual nessa faixa etária. Com o intuito de avaliar se um novo medicamento para DMRI tem poder competitivo com o principal existente atualmente, iremos comparar por meio de modelos de regressão linear a qualidade da acuidade visual de pacientes com DMRI sob ambos tratamentos durante aproximadamente dois meses. Como os dados em questão são oriundos de uma mesma pessoa, contendo assim uma depêndencia natural, um modelo de regressão linear misto para dados discretos é adequado para essa aplicação. Realizando o estudo e percebemos que a droga analisada não provia um efeito melhor que o medicamento já presente no mercado, tendo assim sua produção inviável.
 
-MOTIVAÇÃO SOBRE O MODELO:
-
-* Modelo com efeitos fixos e aleatórios.
-
-* Considerar variabilidade de perfis individuais.
-
-* Estudar e estimar componentes da variância descompactando e adicionando complexidade aos erros.
-
-* Resolver problemas de interdependência dos dados.
-
-Importante em diversas disciplinas 
-
-* ANOVA com efeitos mistos (Estatística, Econometria)
-
-* Modelos lineares hierárquicos (Educação)
-
-* Modelos de efeitos contextuais (Sociologia) 
-
-MOTIVAÇÃO SOBRE OS DADOS/EXPERIMENTO
-
-* Dados disponibilizados pelo Grupo de Estudo de Terapias Farmacológicas para Degeneração Macular (GETFDM) em 1997.
-        
-* Trata-se de informações sobre ensaios clínicos aleatorizados realizados em diferentes centros de estudos.
-        
-* O objetivo era comparar um tratamento experimental chamado \textit{interferon-$\alpha$} e o placebo para pacientes diagnosticados com Degeneração Macular Relacionada a Idade (DMRI).
-        
-* Os dados mostrados são em relação ao placebo e a maior dose administrada do interferon-$\alpha$. 
-
-MOTIVAÇÃO SOBRE A DOENÇA
-
-* Pacientes com DMRI gradativamente perdem a visão. 
-        
-* Durante os ensaios, a qualidade da visão de cada um dos 240 pacientes foi medida no início e após 4, 12, 24 e 52 semanas. 
-        
-* A qualidade da visão foi medida através da quantidade de letras que os pacientes foram capazes de ler em gráficos de visão padronizados.
-        
-* Segue que temos dados longitudinais para cada paciente em forma de medidas da qualidade de sua visão.
-
-
-No que segue apresentaremos a metodologia utilizada para investigar os desempenhos de ambos tratamentos, ou seja a estrutura do modelo  uma análise descritiva dos dados, o modelo proposto, assim como os resultados obtidos com o mesmo. 
-
 # METODOLOGIA
 
 ## MODELO MISTO
