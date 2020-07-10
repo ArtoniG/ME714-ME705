@@ -479,6 +479,11 @@ matrixFit <- stan(file = "matrixModel.stan",
                   data=stanDat,
                   iter = 2000, chains = 4)
 ```
+Percebemos através da tabela X que a cada unidade acrescida ao valor inicial da qualidade da visão aumentamos 9.29 unidades na resposta. Já $\beta_2$, que é o incremento no valor esperado de $Y_{it}$ quando acrescido o tempo de uma semana,  apresenta o valor de 0.83, isso indica que a cada semana as pessoas enxergam quase uma letra a mais do que a semana anterior. Percebemos também que os valores estimados de $\beta_3$ e $\beta_4$ são negativos, como eles representam o efeito geral causado pelo tratamento e o efeito gerado pela interação entre tratamento e tempo em semanas, respectivamente,  isso mostra que o tratamento em questão não é eficaz, tendo resultados piores do que o tratamento já existente.
+
+
+
+
 
 ```{r resumo_bayes}
 estimate_table <- round(summary(matrixFit,pars = c("beta","sigma_e","sigma_p"))$summary,2)
