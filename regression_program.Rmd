@@ -125,7 +125,7 @@ MOTIVAÇÃO SOBRE A DOENÇA
 
 ## MODELO MISTO
 
-**ADICIONAR BREVE DESCRIÇÃO SOBRE MODELOS MISTOS**
+Conforme discutido em @singer, em geral podemos analisar dados provenientes de estudos com medidas repetidas por meio de modelos mistos da forma:
 
 $$\boldsymbol{Y}_{j(k_{j} \ \text{x} \ 1)} = \boldsymbol{X}_{j(k_{j} \ \text{x} \ p)}\boldsymbol{\beta}_{(p \ \text{x} \ 1)} + \boldsymbol{Z}_{j(k_{j} \ \text{x} \ q)}\boldsymbol{b}_{j(q \ \text{x} \ 1)}+\boldsymbol{\xi}_{j(k_{j} \ \text{x} \ 1)}$$
 Onde j = 1,2,...,n é o individuo
@@ -137,7 +137,51 @@ Onde j = 1,2,...,n é o individuo
     \item $\boldsymbol{b}_{j}$: vetor de efeitos aleatórios associado ao indivíduo j.
     \item $\boldsymbol{\xi}_{j}$: vetor de erros associado ao indivíduo j.
 \end{itemize}
+
+Em muitos casos é razoável supor que 
 $$ \boldsymbol{b}_j  \sim \boldsymbol{\cal{N}}_{k}( \boldsymbol{0},\boldsymbol{\cal{D)}} \;\; e \;\; \boldsymbol{\xi}_j \sim \boldsymbol{\cal{N}}_{n_i}( \boldsymbol{0}, \boldsymbol{\Sigma_j})$$
+em que $\boldsymbol{\cal{D}}$ e $\boldsymbol{\Sigma_j}$ são matrizes simétricas definidas positivas e, além disso, que $\boldsymbol{b}_j$ e $\boldsymbol{\xi}_j$ são variáveis aleatórias independentes.
+
+Sob esse modelo, o vetor de respostas associado à i-ésima unidade amostral tem distribuição normal multivariada com vetor de médias e matriz de covariâncias dados, respectivamente por
+$$E(\boldsymbol{Y}_{j}) = \boldsymbol{X}_{j}\boldsymbol{\beta}$$
+e
+$$V(\boldsymbol{Y}_{j}) = \boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'} + \boldsymbol{\Sigma_j}$$
+Em que primeira componente $\boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'}$ modela a dispersão dos perfis individuais de resposta e a segunda componente $\boldsymbol{\Sigma_j}$ está relacionada com a dispersão da resposta em torno dos perfis individuais.
+
+### MODELO PARA A ESTRUTURA DE COVARIÂNCIA
+
+Grande parte do esforço empregado na modelagem de dados com medidas repetidas se concentram na estrutura de covariância. Em geral, o modelo para a matriz de covariâncias $\boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'} + \boldsymbol{\Sigma_j}$ deve depender da maneira pela qual as observações foram obtidas e do conhecimento sobre o mecanismo gerador das observações. Quando $\boldsymbol{\Sigma_j} = \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_{n_j}$ o modelo é chamado de modelo de independência condicional homocedástico, indicando que as $n_j$ observações da j-ésima unidade amostral são condicionalmente independentes dado $b_j$.
+
+Das possíveis estruturas de covariância disponíveis na literatura estatística, adotaremos a Estrutura Uniforme 
+
+$$\boldsymbol{\cal{V}}_\text{j} \equiv \boldsymbol{Z}_\text{j} \boldsymbol{\cal{D}} \boldsymbol{Z}_\text{j}^{\boldsymbol{'}} + \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_{n_j}$$
+    
+\begin{equation*}
+= \begin{pmatrix}
+1 \\
+1 \\
+1 \\
+1 \\
+\end{pmatrix} \tau \begin{pmatrix}
+1 & 1 & 1 & 1
+\end{pmatrix} + \begin{pmatrix}
+\sigma^\textbf{2} & 0 & 0 & 0 \\
+0 & \sigma^\textbf{2} & 0 & 0 \\
+0 & 0 & \sigma^\textbf{2} & 0 \\
+0 & 0 & 0 & \sigma^\textbf{2} \\
+\end{pmatrix}
+\end{equation*}
+
+\begin{equation*}
+= \begin{pmatrix}
+\sigma^{\textbf{2}} + \tau & \tau & \tau & \tau \\
+\tau & \sigma^{\textbf{2}} + \tau & \tau & \tau \\
+\tau & \tau & \sigma^{\textbf{2}} + \tau & \tau \\
+\tau & \tau & \tau & \sigma^{\textbf{2}} + \tau \\
+\end{pmatrix}
+\end{equation*}
+
+Pela estrutura da matriz de variâncias e covariâncias temos um coeficiente de correlação comum para todos os pares de variáveis $\varrho = \tau / (\sigma^2 + \tau)$. Pelo fato do $\tau$ ser não negativo, implica que $\varrho$ é também não negativo.
 
 
 ## INFERÊNCIA BAYESIANA
@@ -363,7 +407,7 @@ $$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \be
 \end{itemize}
 
 \begin{itemize}
-    \item $b_{0i}$ é o efeito aleatório específico para cada paciente. Tal que $b_{0i} \sim \cal{N}(\text{0}, \ \text{d}_{\text{11}}) \ \forall$ i.
+    \item $b_{0i}$ é o efeito aleatório específico para cada paciente. Tal que $b_{0i} \sim \cal{N}(\text{0}, \ \tau) \ \forall$ i.
     \item $\xi _{it}$ é o erro aleatório. Tal que  $\xi _{it} \overset{\small{iid}}{\sim} \cal{N}(\text{0}, \ \sigma ^\text{2}) \ \forall$ i e t.
     \item $b_{0i}$ representa uma variação especifica do $\beta _0$ para cada paciente.
 \end{itemize}
@@ -406,38 +450,8 @@ Y_{i4} \\
 
 $$ \textbf{y}_i = \textbf{X}_i \boldsymbol{\beta} + \textbf{Z}_i \textbf{b}_i + \boldsymbol{\xi}_i $$
 
-Com $\boldsymbol{\cal{D}} \equiv d_{\text{11}}$ e $\boldsymbol{\cal{R}_\text{i}} \equiv \sigma^\text{2}\boldsymbol{I}_\text{4}$, no qual \textbf{I}$_4$ é a matrix identidade 4 x 4.
+Com $\boldsymbol{\cal{D}} \equiv \tau$ e $\boldsymbol{\cal{R}_\text{i}} \equiv \sigma^\text{2}\boldsymbol{I}_\text{4}$, no qual \textbf{I}$_4$ é a matrix identidade 4 x 4.
 
-Logo, a parte aleatória do modelo 4, considerando a matriz de variâncias e covariâncias marginal para o indivíduo i com as 4 observações é dada por:
-
-$$\boldsymbol{\cal{V}}_\text{i} \equiv \boldsymbol{Z}_\text{i} \boldsymbol{\cal{D}} \boldsymbol{Z}_\text{i}^{\boldsymbol{'}} + \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_\text{4}$$
-    
-\begin{equation*}
-= \begin{pmatrix}
-1 \\
-1 \\
-1 \\
-1 \\
-\end{pmatrix} d_{\text{11}} \begin{pmatrix}
-1 & 1 & 1 & 1
-\end{pmatrix} + \begin{pmatrix}
-\sigma^\textbf{2} & 0 & 0 & 0 \\
-0 & \sigma^\textbf{2} & 0 & 0 \\
-0 & 0 & \sigma^\textbf{2} & 0 \\
-0 & 0 & 0 & \sigma^\textbf{2} \\
-\end{pmatrix}
-\end{equation*}
-
-\begin{equation*}
-= \begin{pmatrix}
-\sigma^{\textbf{2}} + d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} \\
-d_{\textbf{11}} & \sigma^{\textbf{2}} + d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} \\
-d_{\textbf{11}} & d_{\textbf{11}} & \sigma^{\textbf{2}} + d_{\textbf{11}} & d_{\textbf{11}} \\
-d_{\textbf{11}} & d_{\textbf{11}} & d_{\textbf{11}} & \sigma^{\textbf{2}} + d_{\textbf{11}} \\
-\end{pmatrix}
-\end{equation*}
-
-Pela estrutura da matriz de variâncias e covariâncias temos um coeficiente de correlação comum para todos os pares de variáveis $\varrho = d_\text{11} / (\sigma^2 + d_\text{11})$. Pelo fato do $d_\text{11}$ ser não negativo, implica que $\varrho$ é também não negativo.
 
 ```{r include=FALSE}
 # MAKE DESIGN MATRIX
