@@ -1,10 +1,8 @@
 ---
 title: "Modelos de Regressão Linear Mistos para dados discretos: Uma abordagem utilizando MCMC através do Stan integrado ao R."
 author: 
-  - Guilherme Artoni - RA 160318
   - Felipe Vieira - RA 160424
-  - Student - RAXXXXXX
-  - Malba Tahan - RAXXXXXX
+  - Guilherme Artoni - RA 160318
 bibliography: referencia.bib
 output: 
   bookdown::pdf_document2:
@@ -81,7 +79,7 @@ bmatrix = function(x, digits=NULL, ...) {
 
 The Stan project develops a probabilistic programming language that implements full Bayesian statistical inference via Markov Chain Monte Carlo, rough Bayesian inference via 'variational' approximation, and (optionally penalized) maximum likelihood estimation via optimization. In all three cases, automatic differentiation is used to quickly and accurately evaluate gradients without burdening the user with the need to derive the partial derivatives.
 
-# Introdução
+# INTRODUÇÃO
 
 A degeneração macular relacionada à idade (DMRI) é uma doença atualmente sem cura que ocorre em uma parte da retina chamada mácula e que leva a perda progressiva da visão central. A DMRI é uma alteração muito comum em pessoas com mais de 55 anos, sendo a causa mais frequente de baixa acuidade visual nessa faixa etária. Com o intuito de avaliar se um novo medicamento para DMRI tem poder competitivo com o principal existente atualmente, iremos comparar por meio de modelos de regressão linear a qualidade da acuidade visual de pacientes com DMRI sob ambos tratamentos durante aproximadamente dois meses.
 
@@ -123,7 +121,11 @@ MOTIVAÇÃO SOBRE A DOENÇA
         
 * Segue que temos dados longitudinais para cada paciente em forma de medidas da qualidade de sua visão.
 
-MOTIVAÇÃO SOBRE MODELOS MISTOS
+# METODOLOGIA
+
+## MODELO MISTO
+
+**ADICIONAR BREVE DESCRIÇÃO SOBRE MODELOS MISTOS**
 
 $$\boldsymbol{Y}_{j(k_{j} \ \text{x} \ 1)} = \boldsymbol{X}_{j(k_{j} \ \text{x} \ p)}\boldsymbol{\beta}_{(p \ \text{x} \ 1)} + \boldsymbol{Z}_{j(k_{j} \ \text{x} \ q)}\boldsymbol{b}_{j(q \ \text{x} \ 1)}+\boldsymbol{\xi}_{j(k_{j} \ \text{x} \ 1)}$$
 Onde j = 1,2,...,n é o individuo
@@ -137,9 +139,92 @@ Onde j = 1,2,...,n é o individuo
 \end{itemize}
 $$ \boldsymbol{b}_j  \sim \boldsymbol{\cal{N}}_{k}( \boldsymbol{0},\boldsymbol{\cal{D)}} \;\; e \;\; \boldsymbol{\xi}_j \sim \boldsymbol{\cal{N}}_{n_i}( \boldsymbol{0}, \boldsymbol{\Sigma_j})$$
 
-# Metodologia
 
-## Análise Descritiva
+## INFERÊNCIA BAYESIANA
+
+Segundo @manly a ideia básica por trás da Inferência Bayesiana é mudar as probabilidades para os parâmetros tomando valores númericos específicos para novas probabilidades como um resultado da coleta de mais dados, com essa mudança sendo alcançada através do Teorema de Bayes.
+Como um exemplo da abordagem Bayesiana, suponha que temos interesse no valor de um parâmetro $\theta$ de uma determinada população, e que antes de qualquer informação ser observada é de alguma forma possível afirmar que $\theta$ deve assumir um dos valores entre $\theta_1$, $\theta_1$, $\dots$, $\theta_n$ e que a probabilidade de o valor ser $\theta_i$ é $\pi(\theta_i)$.
+Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$. Então o Teorema de Bayes afirma que a probabilidade de $\theta$ ser igual a $\theta_i$, dado novas observações, é 
+$$\pi(\theta_i|dados) = \frac{\pi(dados|\theta_i)p(\theta_i)}{\sum_{j=1}^n \pi(data|\theta_j)\pi(\theta_j)}, \quad (??)$$
+onde $\pi(\theta_i|dados)$ é a distribuição a posteriori de $\theta$. Contudo frequentemente lidamos com situações em que vários parâmetros estão envolvidos, de tal forma que no geral
+$$\pi(\theta_1, \theta_2, \dots,\theta_p | dados) \propto \pi(dados | \theta_1, \theta_2, \dots,\theta_p)\pi(\theta_1, \theta_2, \dots,\theta_p), \quad (??)$$
+ou seja, a distribuição a posteriori de vários parâmetros dado um conjunto de dados é proporcional a probabilidade dos dados quando conhecidos os parâmetros  multiplicada pela probabilidade a priori dos parâmetros.
+
+## MONTE CARLO MARKOV CHAIN
+
+### INTRODUÇÃO ÀS CADEIAS DE MARKOV
+
+Considere uma sequência de variáveis aleatórias discretas $\{X_0,X_1,X_2,\dots\}$ e espaço de estados denotado por S=$\{s_1,s_2,\dots,s_k\}$. A sequência de variáveis aleatórias $\{X_0,X_1,X_2,\dots\}$ é uma Cadeia de Markov (CM), se 
+$$p(X_t | X_{t-1},X_{t-2},\dots,X_{0})=p(X_t | X_{t-1}),$$
+para t$=1,2,\dots,$ ou seja, dada $X_{t-1}$, a distribuição de $X_{t}$ independe de suas predecessoras, $X_{t-2},X_{t-3}, \dots$.
+Em um instante t qualquer, a probabilidade que o processo mude de um estado $X_{t} = s_i$ para um estado $X_{t+1} = s_j$ é dada pela matriz de transição, $P=\{p_{ij}\}$. A restrição natural sobre a matriz de transição é que a soma das linhas seja 1, $\sum_j p_{ij} = 1$, para todo $i$.  
+Uma CM admite uma distribuição de equilíbrio $\boldsymbol{\pi}$ se existir $\boldsymbol{\pi}$ tal que $\boldsymbol{\pi} = \boldsymbol{\pi} P$.
+
+**IRREDUTIBILIDADE**
+
+Uma CM, cujas as variáveis aleatórias são discretas, é dita irredutível se for uma cadeia em que partindo-se de um estado qualquer, pode-se atingir qualquer estado, inclusive o inicial, em um número finito de transições.
+
+**REVERSIBILIDADE**
+
+Uma CM é dita reversível se a probabilidade de estar em um estado $s_i$ e mover-se para $s_j$ é igual à probabilidade de estar no estado $s_j$ e mover-se para o estado $s_i$, ou seja,
+$$\boldsymbol{\pi}(i)p(i,j) = \boldsymbol{\pi}(j)p(j,i)$$
+A denominação reversível se deve ao fato que, atendida a condição acima, a mesma lei de transição se aplica à cadeia tanto no sentido natural de evolução do tempo, $t, t+1, t+2, \dots,$ quanto no sentido contrário $t, t-1, t-2, \dots$. A reversibilidade de uma CM está associada ao fato da mesma admitir uma distribuição de equilíbrio.
+
+### AMOSTRADOR DE GIBBS
+
+O Amostrador de Gibbs (AG) é um método para aproximar uma distribuição multivariada tomando somente amostras de distribuições univariadas. O benefício deste método com Inferência Bayesiana é que torna relativamente fácil amostrar de uma distribuição a posteriori multivariada até mesmo quando o número de parâmetros envolvidos é muito grande.
+
+Suponha que a distribuição a posteriori tenha função de densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para os $p$ parâmetros $\theta_1, \theta_2, \dots,\theta_p$ e seja $\pi(\theta_i | \theta_1, \dots, \theta_{i-1}, \theta_{i+1}, \dots,\theta_p)$ a função densidade condicional para $\theta_i$ dado os valores dos outros parâmetros. O problema então é gerar um grande número de amostras aleatórias da distribuição a posteriori com o objetivo de aproximar a própria distribuição e  distribuições de várias funções dos parâmetros. Isto é feito tomando arbitrariamente valores iniciais $\{\theta_1(0), \theta_2(0), \dots,\theta_p(0)\}$ para os $p$ parâmetros e em seguida mudá-los um a um selecionando novos valores como segue:
+$$\theta_1(1) \quad \text{é escolhido de} \quad \pi(\theta_1 | \theta_2(0), \theta_3(0), \dots,\theta_p(0))$$
+$$\theta_2(1) \quad \text{é escolhido de} \quad \pi(\theta_2 | \theta_1(1), \theta_3(0), \dots,\theta_p(0))$$
+$$\theta_3(1) \quad \text{é escolhido de} \quad \pi(\theta_3 | \theta_1(1), \theta_2(1), \theta_4(0) \dots,\theta_p(0))$$
+$$\vdots$$
+$$\theta_p(1) \quad \text{é escolhido de} \quad \pi(\theta_p | \theta_1(1), \theta_2(1), \dots,\theta_{p-1}(1))$$
+Nesse ponto todos os valores iniciais foram substituídos, o que representa um ciclo completo do algoritmo. O processo então é repetido muitas vezes produzindo a sequência $\{\theta_1(1), \theta_2(1), \dots,\theta_p(1)\}, \{\theta_1(2), \theta_2(2), \dots,\theta_p(2)\}, \dots, \{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ a qual caracteriza uma CM, pois em cada etapa do algoritmo a mudança é feita dependendo apenas do valor atual de $\theta$.
+
+### METROPOLIS-HASTINGS
+
+Considere uma distribuição $\pi$ da qual se deseja gerar uma amostra através de uma CM. De acordo com @gamerman deve-se construir um núcleo de transição $p(\theta,\phi)$ de forma que $\pi$ seja a distribuição de equilíbrio da cadeia. Uma forma simple de fazer isso é através de cadeias onde o núcleo $p$ satisfaça 
+$$\pi(\theta)p(\theta,\phi) = \pi(\phi)p(\phi,\theta), \quad \forall \quad (\theta,\phi) \quad (??)$$
+essa equação é também conhecida como equação de equílibrio detalhado. Embora não seja necessária, ela é suficiente para que $\pi$ seja a distribuição de equilíbrio da cadeia. Como vimos na seção ??? essa é a condição de reversibilidade da cadeia.  
+O núcleo $p(\theta,\phi)$ é constituído de 2 elementos: um núcleo de transição arbitrário $q(\theta,\phi)$ e uma probabilidade $\alpha(\theta,\phi)$ de forma que,
+$$p(\theta,\phi) = q(\theta,\phi)\alpha(\theta,\phi), \quad \text{se} \quad \theta \ne \phi$$
+Portanto, o núcleo de transição define uma densidade $p(\theta, .)$ para todos os valores diferentes de $\theta$. Consequentemente, resta uma probabilidade positiva da cadeia ficar em $\theta$ dada por
+$$p(\theta,\theta) = 1 - \int q(\theta,\phi)\alpha(\theta,\phi)\text{d}\phi$$
+Logo, o núcleo de transição define uma distribuição mista para o novo estado $\phi$ da cadeia. Para $\phi \ne \theta$ essa distribuição tem densidade e para $\phi = \theta$, essa distribuição atribui uma probabilidade positiva.  
+A expressão mais comum para a probabilidade de aceitação é 
+$$\alpha(\theta,\phi) = min\{1,\frac{\pi(\phi)\text{q}(\phi,\theta)}{\pi(\theta)\text{q}(\theta,\phi)}\}$$
+onde a razão que aparece na expressão é chamada de razão de teste.
+
+Em termos práticos isso significa que a simulação de uma amostra de $\pi$ usando a cadeia de Markov pode ser esquematizada da seguinte forma:
+
+i) inicialize o contador de iterações da cadeia $j = 1$ e tome um valor arbitrário para $\theta^{(0)}$;
+
+ii) mova a cadeia para um novo valor $\phi$ gerado da densidade $q(\theta^{(j-1)},.)$ ;
+
+iii) calcule a probabilidade de aceitação do movimento $\alpha(\theta^{(j-1)},\phi)$ . Se o movimento for aceito, $\theta^{(j)} = \phi$, caso contrário $\theta^{(j)} = \theta^{(j-1)}$ e a cadeia não se move;
+
+iv) mude o contador de $j$ para $j+1$ e  retorne ao item ii) até a convergência.
+
+A etapa iii) é realizada após a geração de uma quantidade uniforme $u \sim U(0,1)$ independente de todas as outras variáveis. Se $u \le \alpha$, o movimento é aceito e se $u > \alpha$ o movimento não é permitido. O núcleo de transição $q$ define apenas uma proposta de movimento que pode ou não ser confirmado por $\alpha$. Por esse motivo, $q$ é normalmente chamado de proposta e, quando considerado como uma densidade ou distribuição condicional $\text{q} (\theta, .)$ é chamado de densidade ou distribuição condicional proposta.  
+
+### CONEXÃO ENTRE AMOSTRADOR DE GIBBS E METROPOLIS-HASTINGS
+
+O AG pode ser visto como um caso particular do Metropolis-Hastings (MH) onde as distribuições geradoras de candidatos são as condicionais da distribuição de interesse e o candidato é aceito com probabilidade 1. No AG a cadeia está restrita a se mover paralelamente aos eixos enquanto em MH este movimento é livre quando a geração é feita em blocos. Isto se explica em função de no AG atualizarmos um elemento do vetor aleatório por vez, enquanto que no MH isto se faz em bloco.
+
+Considere a situação em que para um vetor aleatório com K elementos, sendo que alguns deles tem densidades condicionais bem definidas e fáceis de gerar, enquanto que os demais não tem esta  facilidade. Neste caso podemos fazer uso combinado do AG para as variáveis fáceis de gerar e do MH para as demais. Esta combinação recebe o nome de Metropolis-within-Gibbs.
+
+O procedimento Metropolis-within-Gibbs, combina aspectos interessantes de MH e AG, gerando direto da distribuição condicional quando for conveniente, caracterizando um passo do AG, e aplicando um passo MH quando a geração direta da condicional for difícil. 
+
+### VANTAGENS E DESVANTAGENS DO MÉTODO
+
+Dois fatores fazem este algoritmo útil. Primeiro que pode ser mostrado que $\{\theta_1(i), \theta_2(i), \dots,\theta_p(i)\}$ segue a distribuição com densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para valores grandes de $i$. Segundo que amostrar observações da distribuição condicional é frequentemente relativamente mais fácil, tornando o método de fácil implementação.
+
+Complicações aparecem por que os conjuntos sucessivos de valores amostrais geradores podem ser correlacionados, porém pode ser resolvido tomando somente valores a partir da r-ésima etapa da sequência, com r grande o suficiente para garantir que os valores tenham correlações negligenciáveis. Paralelamente podem ser geradas várias sequências diferentes com valores iniciais escolhidos aleatoriamente e somente os conjuntos de valores finais $\{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ serem mantidos e comparados. 
+
+# APLICAÇÃO
+
+## ANÁLISE DESCRITIVA
 
 ```{r,warning=FALSE,message=FALSE}
 # Gera os gráficos de perfis
@@ -160,8 +245,6 @@ tN <- tapply(visual, flst, FUN = function(x) length(x[!is.na(x)]))
 ```
 
 O experimento iniciou-se com 240 pacientes sendo que 119 receberam um placebo e 121 receberam a droga. Com o passar das semanas a quantidade de pessoas no estudo foram diminuindo, isso ocorreu por conta de efeitos colaterais sentidos em ambos os tratamentos. Por conta disso, ao fim do experimento obtivemos alguns dados faltantes conforme mostra a tabela 1. 
-
-
 
 \begin{table}
     \centering
@@ -191,8 +274,8 @@ nms2 <- rep(c("n", "Mean", "Mdn"), rep(2,3))
 colnames(res) <- paste(nms1, nms2, sep = ":")
 #res
 ```
-Podemos observar um decrescimento ao longo do tempo das médias e medianas da medida de qualidade da visão  conforme mostra a figura Y (BOXPLOT). Nota-se também um aumento da variabilidade dos dados coletados nas últimas semanas, o aumento no número de dados faltantes pode ser uma possível causa para o crescimento dessa variabilidade. Há também um forte indício de simetria nas distribuições de ambos tratamentos por conta de que médias e medianas apresentaram valores próximos conforme indicado na tabela 2.
 
+Podemos observar um decrescimento ao longo do tempo das médias e medianas da medida de qualidade da visão  conforme mostra a figura Y (BOXPLOT). Nota-se também um aumento da variabilidade dos dados coletados nas últimas semanas, o aumento no número de dados faltantes pode ser uma possível causa para o crescimento dessa variabilidade. Há também um forte indício de simetria nas distribuições de ambos tratamentos por conta de que médias e medianas apresentaram valores próximos conforme indicado na tabela 2.
 
 \begin{table}
     \centering
@@ -232,8 +315,8 @@ varx <- var(visual.x, use = "complete.obs")
 
 #bmatrix(varx)
 ```
-A partir da matriz de variância e covariância $\bold{\Sigma}$ observa-se que há um aumento da variabilidade dos dados coletados nas últimas semanas, em concordância com as informações contidas nos boxplots. Considerando as correlações $\bold{D}$, estas sugerem uma forte ou moderada correlação entre os tratamentos e uma diminuição entre as últimas medidas tomadas, possivelmente consequência dos dados faltantes.
 
+A partir da matriz de variância e covariância $\bold{\Sigma}$ observa-se que há um aumento da variabilidade dos dados coletados nas últimas semanas, em concordância com as informações contidas nos boxplots. Considerando as correlações $\bold{D}$, estas sugerem uma forte ou moderada correlação entre os tratamentos e uma diminuição entre as últimas medidas tomadas, possivelmente consequência dos dados faltantes.
 
 * **Matriz de variancias e covariancias e matriz de correlações amostrais:**
 
@@ -257,204 +340,7 @@ A partir da matriz de variância e covariância $\bold{\Sigma}$ observa-se que h
 \end{pmatrix}
 \end{equation*}
 
-
-## Modelagem
-
-# MODELO NORMAL INDEPENDENTE HOMOCEDASTICO
-
-Vamos considerar o seguinte modelo:
-    
-$$Y_{it} = \beta _{0t} + \beta _1x_{1i} + \beta _{2t}x_{2i} + \xi _{it}, \qquad (3)$$
-\begin{itemize}
-\item $Y_{it}$ é o valor da qualidade da visão medido no paciente i (i = 1, ..., 240) no tempo t (t = 1, 2, 3, 4, correspondendo ao valores 4, 12, 24 e 52 semanas, respectivamente).
-
-\item $x_{1i}$ é valor medido inicialmente da qualidade da visão.
-
-\item $x_{2i}$ é o indicador do tratamento (0 se placebo e 1 caso contrário).
-\end{itemize}
-
-Interpretação dos parâmetros
-
-\begin{itemize}
-  \item $\beta _{0t}$ representa o intercepto específico para cada tempo de medição, ou seja o valor esperado de $Y_{it}$ quando as covariáveis $x_{1i}$ e $x_{2i}$ são simultaneamente iguais a zero.
-    
-  \item $\beta _1$ é o incremento positivo ou negativo no valor esperado de $Y_{it}$  devido a variação em uma unidade da qualidade da visão inicial, fixada a covariável $x_{2i}$.
-    
-  \item $\beta _{2t}$ é o incremento positivo ou negativo no valor esperado de $Y_{it}$ específico para cada tempo de medição, fixada a covariável $x_{1i}$, ou seja é o efeito causado pelo tratamento proposto ao longo das semanas.   
-    
-  \item $\xi _{it}$ representa o erro aleatório, tal que $\xi _{it} \overset{\small{iid}}{\sim} \cal{N}(\text{0}, \sigma ^\text{2}) \ \forall$ i e t.
-\end{itemize}
-
-\begin{itemize}
-\item \textbf{Observação}: Como atualmente ainda não há uma cura para DMRI, é pouco provável que um indivíduo que chegue com $x_{1i} = 0$ no início do estudo, ou seja com sua qualidade de visão nula venha a ter uma medição posterior positiva. 
-\item Junto a isso desconsideraremos $\beta _{0}$, um intercepto geral no ajuste do modelo.
-\end{itemize}
-
-```{r,warning=FALSE,message=FALSE}
-# Ajuste do modelo Normal Independente Homocedástico
-lm.form <- formula(visual ~ -1 + visual0 + time.f + treat.f:time.f)
-lm6.1 <- lm(lm.form, armd)
-```
-
-```{r,include=FALSE}
-# Estimativas, Erros Padrão, t-value, p-value, coef. de determinação R² e R² ajustado e interv. conf.
-(summ <- summary(lm6.1))
-summ$sigma
-confint(lm6.1)
-```
-
-
-  \begin{table}
-  \centering
-  \resizebox{10cm}{!}{
-  \begin{tabular}{cccccc}
-  \multicolumn{6}{c}{\textbf{Ajuste do Modelo, estimativas pontuais e intervalares}} \\
-  \hline
-  \textbf{Parâmetros} & \textbf{Estimativa} & \textbf{EP} & \textbf{Estat-t} & \textbf{IC(95\%)} &  \textbf{p-valor} \\
-  $\beta _1$ & 0.83 & 0.03 & 29.21 & [0,77 ; 0,89] & $<$ 2.2e-16 \\
-  $\beta _{01}$ & 8.08 & 1.94 & 4.16 & [4,26 ; 11,89] & 3.6e-05 \\
-  $\beta _{02}$ & 7.08 & 1.94 & 3.65 & [3,27 ; 10,89] & $<$ 0.001 \\
-  $\beta _{03}$ & 3.63 & 1.95 & 1.86 & [-0,20 ; 7,46] & 0.063 \\
-  $\beta _{04}$ & -1.75 & 1.99 & -0.88 & [-5,65 ; 2,16] & 0.380 \\
-  $\beta _{21}$ & -2.35 & 1.63 & -1.44 & [-5,55 ; 0,84] & 0.149 \\
-  $\beta _{22}$ & -3.71 & 1.64 & -2.26 & [-6,93 ; -0,48] & 0.024 \\
-  $\beta _{23}$ & -3.45 & 1.69 & -2.04 & [-6,77 ; -0,12] & 0.042 \\
-  $\beta _{24}$ & -4.47 & 1.78 & -2.52 & [-7,96 ; -0,98] & 0.012 \\
-  $\sigma$ & 12.38 & & & & \\
-  \hline
-  \end{tabular}
-  }
-  \caption{Estimativas pontuais dos parâmetros.}
-\end{table}
-
-Dadas as estimativas dos efeitos do tratamento serem negativas isso favorece  os efeitos do placebo, ou seja o placebo tem melhores resultados que o tratamento proposto. $R^2$:  0,9432 \ e \ $R^2$ ajustado :  0,9426
-
-```{r,include=FALSE}
-# ANOVA
-anova(lm6.1)
-```
-
-\begin{table}
-  \centering
-  \resizebox{10cm}{!}{
-  \begin{tabular}{cccccc}
-  \multicolumn{6}{c}{\textbf{Análise de Variância}} \\
-  \hline
-      \textbf{FV} & \textbf{GL} & \textbf{SQ} & \textbf{QM} &  \textbf{Estat-F} & \textbf{p-valor} \\
-      Est. Inic. & 1 & 2165776 & 2165776 & 14138.99 & $<$ 2.2e-16 \\
-      Tempo & 4 & 14434 & 3608 & 23.56 & $<$ 2.2e-16 \\
-      Tratamento & 4 & 2703 & 676 & 4.41 & 0.002 \\
-      \cline{1-4}
-      Resíduos & 858 & 131426 & 153 & & \\
-      \hline
-  \end{tabular}
-  }
-  \caption{Análise de Variância com teste - F sequencial.}
-\end{table}
-    
-\begin{itemize}
-    \item Visto que há significância no teste-F isso indica que existe efeito no tratamento com a variação do tempo. 
-\end{itemize}
-
-```{r,warning=FALSE,message=FALSE}
-# Análise de Resíduos
-normal_diag(lm6.1) #checa indepedência e homocedásticidade
-```
-
-```{r,warning=FALSE,message=FALSE,include=FALSE}
-envelnorm(lm6.1) #checa normalidade
-```
-
-```{r,warning=FALSE,message=FALSE}
-cook_hat(lm6.1) #análise de influência e alavancagem
-```
-
-* Como o modelo proposto não leva em consideração as correlações entre as observações da qualidade visual de cada indivíduo, nem a heterocedasticidade que há entre as diferentes medidas ao longo do tempo, ele não deve ser considerado como base para inferências. 
-
-
-# INFERÊNCIA BAYESIANA
-
-Segundo @manly a ideia básica por trás da Inferência Bayesiana é mudar as probabilidades para os parâmetros tomando valores númericos específicos para novas probabilidades como um resultado da coleta de mais dados, com essa mudança sendo alcançada através do Teorema de Bayes.
-Como um exemplo da abordagem Bayesiana, suponha que temos interesse no valor de um parâmetro $\theta$ de uma determinada população, e que antes de qualquer informação ser observada é de alguma forma possível afirmar que $\theta$ deve assumir um dos valores entre $\theta_1$, $\theta_1$, $\dots$, $\theta_n$ e que a probabilidade de o valor ser $\theta_i$ é $\pi(\theta_i)$.
-Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$. Então o Teorema de Bayes afirma que a probabilidade de $\theta$ ser igual a $\theta_i$, dado novas observações, é 
-$$\pi(\theta_i|dados) = \frac{\pi(dados|\theta_i)p(\theta_i)}{\sum_{j=1}^n \pi(data|\theta_j)\pi(\theta_j)}, \quad (??)$$
-onde $\pi(\theta_i|dados)$ é a distribuição a posteriori de $\theta$. Contudo frequentemente lidamos com situações em que vários parâmetros estão envolvidos, de tal forma que no geral
-$$\pi(\theta_1, \theta_2, \dots,\theta_p | dados) \propto \pi(dados | \theta_1, \theta_2, \dots,\theta_p)\pi(\theta_1, \theta_2, \dots,\theta_p), \quad (??)$$
-ou seja, a distribuição a posteriori de vários parâmetros dado um conjunto de dados é proporcional a probabilidade dos dados quando conhecidos os parâmetros  multiplicada pela probabilidade a priori dos parâmetros.
-
-# MONTE CARLO MARKOV CHAIN
-
-## INTRODUÇÃO ÀS CADEIAS DE MARKOV
-
-Considere uma sequência de variáveis aleatórias discretas $\{X_0,X_1,X_2,\dots\}$ e espaço de estados denotado por S=$\{s_1,s_2,\dots,s_k\}$. A sequência de variáveis aleatórias $\{X_0,X_1,X_2,\dots\}$ é uma Cadeia de Markov (CM), se 
-$$p(X_t | X_{t-1},X_{t-2},\dots,X_{0})=p(X_t | X_{t-1}),$$
-para t$=1,2,\dots,$ ou seja, dada $X_{t-1}$, a distribuição de $X_{t}$ independe de suas predecessoras, $X_{t-2},X_{t-3}, \dots$.
-Em um instante t qualquer, a probabilidade que o processo mude de um estado $X_{t} = s_i$ para um estado $X_{t+1} = s_j$ é dada pela matriz de transição, $P=\{p_{ij}\}$. A restrição natural sobre a matriz de transição é que a soma das linhas seja 1, $\sum_j p_{ij} = 1$, para todo $i$.  
-Uma CM admite uma distribuição de equilíbrio $\boldsymbol{\pi}$ se existir $\boldsymbol{\pi}$ tal que $\boldsymbol{\pi} = \boldsymbol{\pi} P$.
-
-**IRREDUTIBILIDADE**
-
-Uma CM, cujas as variáveis aleatórias são discretas, é dita irredutível se for uma cadeia em que partindo-se de um estado qualquer, pode-se atingir qualquer estado, inclusive o inicial, em um número finito de transições.
-
-**REVERSIBILIDADE**
-
-Uma CM é dita reversível se a probabilidade de estar em um estado $s_i$ e mover-se para $s_j$ é igual à probabilidade de estar no estado $s_j$ e mover-se para o estado $s_i$, ou seja,
-$$\boldsymbol{\pi}(i)p(i,j) = \boldsymbol{\pi}(j)p(j,i)$$
-A denominação reversível se deve ao fato que, atendida a condição acima, a mesma lei de transição se aplica à cadeia tanto no sentido natural de evolução do tempo, $t, t+1, t+2, \dots,$ quanto no sentido contrário $t, t-1, t-2, \dots$. A reversibilidade de uma CM está associada ao fato da mesma admitir uma distribuição de equilíbrio.
-
-## AMOSTRADOR DE GIBBS
-
-O Amostrador de Gibbs (AG) é um método para aproximar uma distribuição multivariada tomando somente amostras de distribuições univariadas. O benefício deste método com Inferência Bayesiana é que torna relativamente fácil amostrar de uma distribuição a posteriori multivariada até mesmo quando o número de parâmetros envolvidos é muito grande.
-
-Suponha que a distribuição a posteriori tenha função de densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para os $p$ parâmetros $\theta_1, \theta_2, \dots,\theta_p$ e seja $\pi(\theta_i | \theta_1, \dots, \theta_{i-1}, \theta_{i+1}, \dots,\theta_p)$ a função densidade condicional para $\theta_i$ dado os valores dos outros parâmetros. O problema então é gerar um grande número de amostras aleatórias da distribuição a posteriori com o objetivo de aproximar a própria distribuição e  distribuições de várias funções dos parâmetros. Isto é feito tomando arbitrariamente valores iniciais $\{\theta_1(0), \theta_2(0), \dots,\theta_p(0)\}$ para os $p$ parâmetros e em seguida mudá-los um a um selecionando novos valores como segue:
-$$\theta_1(1) \quad \text{é escolhido de} \quad \pi(\theta_1 | \theta_2(0), \theta_3(0), \dots,\theta_p(0))$$
-$$\theta_2(1) \quad \text{é escolhido de} \quad \pi(\theta_2 | \theta_1(1), \theta_3(0), \dots,\theta_p(0))$$
-$$\theta_3(1) \quad \text{é escolhido de} \quad \pi(\theta_3 | \theta_1(1), \theta_2(1), \theta_4(0) \dots,\theta_p(0))$$
-$$\vdots$$
-$$\theta_p(1) \quad \text{é escolhido de} \quad \pi(\theta_p | \theta_1(1), \theta_2(1), \dots,\theta_{p-1}(1))$$
-Nesse ponto todos os valores iniciais foram substituídos, o que representa um ciclo completo do algoritmo. O processo então é repetido muitas vezes produzindo a sequência $\{\theta_1(1), \theta_2(1), \dots,\theta_p(1)\}, \{\theta_1(2), \theta_2(2), \dots,\theta_p(2)\}, \dots, \{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ a qual caracteriza uma CM, pois em cada etapa do algoritmo a mudança é feita dependendo apenas do valor atual de $\theta$.
-
-## METROPOLIS-HASTINGS
-
-Considere uma distribuição $\pi$ da qual se deseja gerar uma amostra através de uma CM. De acordo com @gamerman deve-se construir um núcleo de transição $p(\theta,\phi)$ de forma que $\pi$ seja a distribuição de equilíbrio da cadeia. Uma forma simple de fazer isso é através de cadeias onde o núcleo $p$ satisfaça 
-$$\pi(\theta)p(\theta,\phi) = \pi(\phi)p(\phi,\theta), \quad \forall \quad (\theta,\phi) \quad (??)$$
-essa equação é também conhecida como equação de equílibrio detalhado. Embora não seja necessária, ela é suficiente para que $\pi$ seja a distribuição de equilíbrio da cadeia. Como vimos na seção ??? essa é a condição de reversibilidade da cadeia.  
-O núcleo $p(\theta,\phi)$ é constituído de 2 elementos: um núcleo de transição arbitrário $q(\theta,\phi)$ e uma probabilidade $\alpha(\theta,\phi)$ de forma que,
-$$p(\theta,\phi) = q(\theta,\phi)\alpha(\theta,\phi), \quad \text{se} \quad \theta \ne \phi$$
-Portanto, o núcleo de transição define uma densidade $p(\theta, .)$ para todos os valores diferentes de $\theta$. Consequentemente, resta uma probabilidade positiva da cadeia ficar em $\theta$ dada por
-$$p(\theta,\theta) = 1 - \int q(\theta,\phi)\alpha(\theta,\phi)\text{d}\phi$$
-Logo, o núcleo de transição define uma distribuição mista para o novo estado $\phi$ da cadeia. Para $\phi \ne \theta$ essa distribuição tem densidade e para $\phi = \theta$, essa distribuição atribui uma probabilidade positiva.  
-A expressão mais comum para a probabilidade de aceitação é 
-$$\alpha(\theta,\phi) = min\{1,\frac{\pi(\phi)\text{q}(\phi,\theta)}{\pi(\theta)\text{q}(\theta,\phi)}\}$$
-onde a razão que aparece na expressão é chamada de razão de teste.
-
-Em termos práticos isso significa que a simulação de uma amostra de $\pi$ usando a cadeia de Markov pode ser esquematizada da seguinte forma:
-
-i) inicialize o contador de iterações da cadeia $j = 1$ e tome um valor arbitrário para $\theta^{(0)}$;
-
-ii) mova a cadeia para um novo valor $\phi$ gerado da densidade $q(\theta^{(j-1)},.)$ ;
-
-iii) calcule a probabilidade de aceitação do movimento $\alpha(\theta^{(j-1)},\phi)$ . Se o movimento for aceito, $\theta^{(j)} = \phi$, caso contrário $\theta^{(j)} = \theta^{(j-1)}$ e a cadeia não se move;
-
-iv) mude o contador de $j$ para $j+1$ e  retorne ao item ii) até a convergência.
-
-A etapa iii) é realizada após a geração de uma quantidade uniforme $u \sim U(0,1)$ independente de todas as outras variáveis. Se $u \le \alpha$, o movimento é aceito e se $u > \alpha$ o movimento não é permitido. O núcleo de transição $q$ define apenas uma proposta de movimento que pode ou não ser confirmado por $\alpha$. Por esse motivo, $q$ é normalmente chamado de proposta e, quando considerado como uma densidade ou distribuição condicional $\text{q} (\theta, .)$ é chamado de densidade ou distribuição condicional proposta.  
-
-## CONEXÃO ENTRE AMOSTRADOR DE GIBBS E METROPOLIS-HASTINGS
-
-O AG pode ser visto como um caso particular do Metropolis-Hastings (MH) onde as distribuições geradoras de candidatos são as condicionais da distribuição de interesse e o candidato é aceito com probabilidade 1. No AG a cadeia está restrita a se mover paralelamente aos eixos enquanto em MH este movimento é livre quando a geração é feita em blocos. Isto se explica em função de no AG atualizarmos um elemento do vetor aleatório por vez, enquanto que no MH isto se faz em bloco.
-
-Considere a situação em que para um vetor aleatório com K elementos, sendo que alguns deles tem densidades condicionais bem definidas e fáceis de gerar, enquanto que os demais não tem esta  facilidade. Neste caso podemos fazer uso combinado do AG para as variáveis fáceis de gerar e do MH para as demais. Esta combinação recebe o nome de Metropolis-within-Gibbs.
-
-O procedimento Metropolis-within-Gibbs, combina aspectos interessantes de MH e AG, gerando direto da distribuição condicional quando for conveniente, caracterizando um passo do AG, e aplicando um passo MH quando a geração direta da condicional for difícil. 
-
-## VANTAGENS E DESVANTAGENS DO MÉTODO
-
-Dois fatores fazem este algoritmo útil. Primeiro que pode ser mostrado que $\{\theta_1(i), \theta_2(i), \dots,\theta_p(i)\}$ segue a distribuição com densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para valores grandes de $i$. Segundo que amostrar observações da distribuição condicional é frequentemente relativamente mais fácil, tornando o método de fácil implementação.
-
-Complicações aparecem por que os conjuntos sucessivos de valores amostrais geradores podem ser correlacionados, porém pode ser resolvido tomando somente valores a partir da r-ésima etapa da sequência, com r grande o suficiente para garantir que os valores tenham correlações negligenciáveis. Paralelamente podem ser geradas várias sequências diferentes com valores iniciais escolhidos aleatoriamente e somente os conjuntos de valores finais $\{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ serem mantidos e comparados. 
-
-# MODELO MISTO
+## MODELAGEM
 
 Vamos considerar agora o seguinte modelo:
 
@@ -600,7 +486,6 @@ Dinv <- solve(D)
 corr_mtrx <- round(Dinv%*%S%*%Dinv,2)
 ```
 
-
 **Matrizes de Variâncias e Covariâncias Condicionais:**
 $$\begin{pmatrix}
 `r round(estimate_table["sigma_e","mean"]**2,2)` & 0 & 0 & 0 \\
@@ -623,7 +508,8 @@ $$\begin{pmatrix}
 `r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` \\
 `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` \\
 `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` \\
-\end{pmatrix}
-$$
+\end{pmatrix}$$
+
+# CONSIDERAÇÕES FINAIS
 
 # Referências
