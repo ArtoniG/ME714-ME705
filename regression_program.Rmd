@@ -77,11 +77,14 @@ bmatrix = function(x, digits=NULL, ...) {
 }
 ```
 
-The Stan project develops a probabilistic programming language that implements full Bayesian statistical inference via Markov Chain Monte Carlo, rough Bayesian inference via 'variational' approximation, and (optionally penalized) maximum likelihood estimation via optimization. In all three cases, automatic differentiation is used to quickly and accurately evaluate gradients without burdening the user with the need to derive the partial derivatives.
-
 # INTRODUÇÃO
 
-A degeneração macular relacionada à idade (DMRI) é uma doença atualmente sem cura que ocorre em uma parte da retina chamada mácula e que leva a perda progressiva da visão central. A DMRI é uma alteração muito comum em pessoas com mais de 55 anos, sendo a causa mais frequente de baixa acuidade visual nessa faixa etária. Com o intuito de avaliar se um novo medicamento para DMRI tem poder competitivo com o principal existente atualmente, iremos comparar por meio de modelos de regressão linear a qualidade da acuidade visual de pacientes com DMRI sob ambos tratamentos durante aproximadamente dois meses. Como os dados em questão são oriundos de uma mesma pessoa, contendo assim uma depêndencia natural, um modelo de regressão linear misto para dados discretos é adequado para essa aplicação. Realizando o estudo e percebemos que a droga analisada não provia um efeito melhor que o medicamento já presente no mercado, tendo assim sua produção inviável.
+A degeneração macular relacionada à idade (DMRI) é uma doença atualmente sem cura que ocorre em uma parte da retina chamada mácula e que leva a perda progressiva da visão central. A DMRI é uma alteração muito comum em pessoas com mais de 55 anos, sendo a causa mais frequente de baixa acuidade visual nessa faixa etária. A partir dos dados disponibilizados pelo Grupo de Estudo de Terapias Farmacológicas para Degeneração Macular (GETFDM) em 1997, iremos avaliar se um novo medicamento para DMRI tem poder competitivo com o principal existente no mercado. Trata-se de informações sobre ensaios clínicos aleatorizados realizados em diferentes centros de estudos. Durante os ensaios, a qualidade da visão de cada um dos 240 pacientes foi medida no início e após 4, 12, 24 e 52 semanas. A qualidade da visão foi medida através da quantidade de letras que os pacientes foram capazes de ler em gráficos de visão padronizados. Estes referem-se a panéis com várias letras agrupadas em linhas, de modo que o tamanho das letras diminui de cima para baixo à medida que o número de letras aumenta de cima para baixo. O objetivo era comparar um tratamento experimental chamado *interferon*$-\alpha$ e o placebo para pacientes diagnosticados com DMRI. Os dados mostrados são em relação ao placebo e a maior dose administrada do *interferon*$-\alpha$. Segue que temos dados longitudinais para cada paciente em forma de medidas da qualidade de sua visão.  
+Facilmente encontramos na literatura que uma das abordagens utilizadas para modelar este tipo de estudo com medidas repetidas são modelos conhecidos como modelos de efeitos aleatórios ou modelos mistos (MM), como podemos encontrar nos trabalhos de @gelman, @manly, @gamerman e @singer. A estrutura deste tipo de modelo considera não somente efeitos fixos e a componente dos erros, como também uma componente aleatória que incorpora a variabilidade do comportamento individual da i-ésima unidade experimental. Este tipo de estrutura tem diversas aplicações, tais como em modelos lineares hierárquicos e modelos de efeitos contextuais utilizados em estudos nas áreas da Educação e Sociologia respectivamente.  
+Afim de obter os resultados do ajuste do modelo utilizaremos uma abordagem da Inferência Bayesiana, através do método Monte Carlo Markov Chain (MCMC) implementado no software Stan integrado ao software R por meio do pacote *rstan*. Segundo @sorensen o Stan fornece um conjunto de ferramentas escaláveis para ajustar modelos na maioria das aplicações padrões de MM.  
+No que segue apresentaremos a metodologia utilizada para investigar os desempenhos de ambos tratamentos, ou seja a estrutura dos modelo mistos, o método MCMC, uma análise descritiva dos dados, o modelo proposto, assim como os resultados obtidos com o mesmo.
+
+\newpage
 
 # METODOLOGIA
 
@@ -132,9 +135,7 @@ $$\boldsymbol{\cal{V}}_\text{j} \equiv \boldsymbol{Z}_\text{j} \boldsymbol{\cal{
 0 & 0 & \sigma^\textbf{2} & 0 \\
 0 & 0 & 0 & \sigma^\textbf{2} \\
 \end{pmatrix}
-\end{equation*}
-
-\begin{equation*}
+% \quad
 = \begin{pmatrix}
 \sigma^{\textbf{2}} + \tau & \tau & \tau & \tau \\
 \tau & \sigma^{\textbf{2}} + \tau & \tau & \tau \\
@@ -151,9 +152,9 @@ Pela estrutura da matriz de variâncias e covariâncias temos um coeficiente de 
 Segundo @manly a ideia básica por trás da Inferência Bayesiana é mudar as probabilidades para os parâmetros tomando valores númericos específicos para novas probabilidades como um resultado da coleta de mais dados, com essa mudança sendo alcançada através do Teorema de Bayes.
 Como um exemplo da abordagem Bayesiana, suponha que temos interesse no valor de um parâmetro $\theta$ de uma determinada população, e que antes de qualquer informação ser observada é de alguma forma possível afirmar que $\theta$ deve assumir um dos valores entre $\theta_1$, $\theta_1$, $\dots$, $\theta_n$ e que a probabilidade de o valor ser $\theta_i$ é $\pi(\theta_i)$.
 Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$. Então o Teorema de Bayes afirma que a probabilidade de $\theta$ ser igual a $\theta_i$, dado novas observações, é 
-$$\pi(\theta_i|dados) = \frac{\pi(dados|\theta_i)p(\theta_i)}{\sum_{j=1}^n \pi(data|\theta_j)\pi(\theta_j)}, \quad (??)$$
+$$\pi(\theta_i|dados) = \frac{\pi(dados|\theta_i)p(\theta_i)}{\sum_{j=1}^n \pi(data|\theta_j)\pi(\theta_j)},$$
 onde $\pi(\theta_i|dados)$ é a distribuição a posteriori de $\theta$. Contudo frequentemente lidamos com situações em que vários parâmetros estão envolvidos, de tal forma que no geral
-$$\pi(\theta_1, \theta_2, \dots,\theta_p | dados) \propto \pi(dados | \theta_1, \theta_2, \dots,\theta_p)\pi(\theta_1, \theta_2, \dots,\theta_p), \quad (??)$$
+$$\pi(\theta_1, \theta_2, \dots,\theta_p | dados) \propto \pi(dados | \theta_1, \theta_2, \dots,\theta_p)\pi(\theta_1, \theta_2, \dots,\theta_p),$$
 ou seja, a distribuição a posteriori de vários parâmetros dado um conjunto de dados é proporcional a probabilidade dos dados quando conhecidos os parâmetros  multiplicada pela probabilidade a priori dos parâmetros.
 
 ## MONTE CARLO MARKOV CHAIN
@@ -191,8 +192,8 @@ Nesse ponto todos os valores iniciais foram substituídos, o que representa um c
 ### METROPOLIS-HASTINGS
 
 Considere uma distribuição $\pi$ da qual se deseja gerar uma amostra através de uma CM. De acordo com @gamerman deve-se construir um núcleo de transição $p(\theta,\phi)$ de forma que $\pi$ seja a distribuição de equilíbrio da cadeia. Uma forma simple de fazer isso é através de cadeias onde o núcleo $p$ satisfaça 
-$$\pi(\theta)p(\theta,\phi) = \pi(\phi)p(\phi,\theta), \quad \forall \quad (\theta,\phi) \quad (??)$$
-essa equação é também conhecida como equação de equílibrio detalhado. Embora não seja necessária, ela é suficiente para que $\pi$ seja a distribuição de equilíbrio da cadeia. Como vimos na seção ??? essa é a condição de reversibilidade da cadeia.  
+$$\pi(\theta)p(\theta,\phi) = \pi(\phi)p(\phi,\theta), \quad \forall \quad (\theta,\phi))$$
+essa equação é também conhecida como equação de equílibrio detalhado. Embora não seja necessária, ela é suficiente para que $\pi$ seja a distribuição de equilíbrio da cadeia. Como vimos na seção 2.3.1 essa é a condição de reversibilidade da cadeia.  
 O núcleo $p(\theta,\phi)$ é constituído de 2 elementos: um núcleo de transição arbitrário $q(\theta,\phi)$ e uma probabilidade $\alpha(\theta,\phi)$ de forma que,
 $$p(\theta,\phi) = q(\theta,\phi)\alpha(\theta,\phi), \quad \text{se} \quad \theta \ne \phi$$
 Portanto, o núcleo de transição define uma densidade $p(\theta, .)$ para todos os valores diferentes de $\theta$. Consequentemente, resta uma probabilidade positiva da cadeia ficar em $\theta$ dada por
@@ -204,11 +205,11 @@ onde a razão que aparece na expressão é chamada de razão de teste.
 
 Em termos práticos isso significa que a simulação de uma amostra de $\pi$ usando a cadeia de Markov pode ser esquematizada da seguinte forma:
 
-i) inicialize o contador de iterações da cadeia $j = 1$ e tome um valor arbitrário para $\theta^{(0)}$;
+i) inicialize o contador de iterações da cadeia $j = 1$ e tome um valor arbitrário para $\theta{(0)}$;
 
-ii) mova a cadeia para um novo valor $\phi$ gerado da densidade $q(\theta^{(j-1)},.)$ ;
+ii) mova a cadeia para um novo valor $\phi$ gerado da densidade $q(\theta{(j-1)},.)$ ;
 
-iii) calcule a probabilidade de aceitação do movimento $\alpha(\theta^{(j-1)},\phi)$ . Se o movimento for aceito, $\theta^{(j)} = \phi$, caso contrário $\theta^{(j)} = \theta^{(j-1)}$ e a cadeia não se move;
+iii) calcule a probabilidade de aceitação do movimento $\alpha(\theta{(j-1)},\phi)$ . Se o movimento for aceito, $\theta{(j)} = \phi$, caso contrário $\theta{(j)} = \theta{(j-1)}$ e a cadeia não se move;
 
 iv) mude o contador de $j$ para $j+1$ e  retorne ao item ii) até a convergência.
 
@@ -250,7 +251,7 @@ flst <- list(time.f, treat.f)
 tN <- tapply(visual, flst, FUN = function(x) length(x[!is.na(x)]))
 ```
 
-O experimento iniciou-se com 240 pacientes sendo que 119 receberam um placebo e 121 receberam a droga. Com o passar das semanas a quantidade de pessoas no estudo foram diminuindo, isso ocorreu por conta de efeitos colaterais sentidos em ambos os tratamentos. Por conta disso, ao fim do experimento obtivemos alguns dados faltantes conforme mostra a Tabela \ref{tab:resumo}. 
+O experimento iniciou-se com 240 pacientes sendo que 119 receberam um placebo e 121 receberam a droga. Com o passar das semanas a quantidade de pessoas no estudo foram diminuindo, fato que é comum neste tipo de experimento dada muitas vezes a dificuldade de acesso dos paciente até os centros de estudo, assim como possíveis efeitos colaterais sentidos em ambos os tratamentos. Por conta disso, ao fim do experimento obtivemos alguns dados faltantes conforme mostra a Tabela \ref{tab:resumo}. 
 
 ```{r,warning=FALSE,message=FALSE}
 # Médias e medianas amostrais das medidas da qualidade da visão para cada semana observada
@@ -335,7 +336,7 @@ A partir da matriz de variância e covariância $\bold{\Sigma}$ observa-se que h
 
 Vamos considerar agora o seguinte modelo:
 
-$$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \beta _4 x_{2it} x_{3i} + b_{0i} + \xi _{it},  \qquad  (4)$$
+$$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \beta _4 x_{2it} x_{3i} + b_{0i} + \xi _{it},$$
 
 \begin{itemize}
     \item $Y_{it}$ é a qualidade da visão do paciente i (i = 1, ..., 240) no tempo t (t = 1, 2, 3, 4, correspondendo aos valores 4º, 12º, 24º e 52º semana, respectivamente).
@@ -431,14 +432,15 @@ matrixFit <- stan(file = "matrixModel.stan",
 estimate_table <- round(summary(matrixFit,pars = c("beta","sigma_e","sigma_p"))$summary,2)
 ```
 
-```{r resumo_bayes}
+```{r}
 kable(estimate_table,
       align = "c",
-      booktabs = TRUE) %>%
+      booktabs = TRUE,
+      label = "bayes") %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
-A partir dos resultados presentes na Tabela \ref{tab:resumo_bayes} obtidos através do ajuste do modelo temos que o valor esperado da qualidade da visão dos pacientes é de `r round(estimate_table["beta[1]","mean"],2)`. Enquanto que a cada unidade acrescida ao valor inicial da qualidade da visão aumentamos em `r round(estimate_table["beta[2]","mean"],2)` unidades na resposta. Já o incremento no valor esperado de $Y_{it}$ quando acrescido o tempo de uma semana para a próxima observada quando o paciente não está sob o tratamento *interferon*$-\alpha$ é de `r round(estimate_table["beta[3]","mean"],2)` unidades. Ao passo que quando o paciente está sob o tratamento *interferon*$-\alpha$ esse incremento apresenta o valor de `r round(sum(estimate_table[c("beta[4]","beta[5]"),"mean"]),2)`. Com isso, temos indícios que até o final do experimento as pessoas enxergam quase uma letra a menos do que no início apenas pelo efeito do tempo. Percebemos também que os valores estimados de $\beta_3$ e $\beta_4$ são negativos, como eles representam o efeito geral causado pelo tratamento e o efeito gerado pela interação entre tratamento e tempo respectivamente, isso mostra que o tratamento em questão não é eficaz, tendo resultados piores do que o tratamento já existente.
+A partir dos resultados presentes na Tabela \@ref(tab:bayes) obtidos através do ajuste do modelo temos que o valor esperado da qualidade da visão dos pacientes é de `r round(estimate_table["beta[1]","mean"],2)`. Enquanto que a cada unidade acrescida ao valor inicial da qualidade da visão aumentamos em `r round(estimate_table["beta[2]","mean"],2)` unidades na resposta. Já o incremento no valor esperado de $Y_{it}$ quando acrescido o tempo de uma semana para a próxima observada quando o paciente não está sob o tratamento *interferon*$-\alpha$ é de `r round(estimate_table["beta[3]","mean"],2)` unidades. Ao passo que quando o paciente está sob o tratamento *interferon*$-\alpha$ esse incremento apresenta o valor de `r round(sum(estimate_table[c("beta[4]","beta[5]"),"mean"]),2)`. Com isso, temos indícios que até o final do experimento as pessoas sob o tratamento placebo enxergam quase uma letra a menos do que no início apenas pelo efeito do tempo. Percebemos também que os valores estimados de $\beta_3$ e $\beta_4$ são negativos, como eles representam o efeito geral causado pelo tratamento e o efeito gerado pela interação entre tratamento e tempo respectivamente, isso mostra que o tratamento *interferon*$-\alpha$ tem desempenho inferior e de certo modo aparenta agravar a situação dos pacientes.
 
 ```{r}
 D <- diag(round(sqrt(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2)),2),nrow = 4)
@@ -481,5 +483,9 @@ traceplot(matrixFit,pars=c("sigma_p"))
 Como descrito na seção de metologia para diminuir a influência dos valores iniciais, geralmente são descartados a primeira metade de cada sequência. Dessa forma nossas inferências são baseadas na suposição de que a distribuição dos valores simulados para valores grandes de $i$ são próximos da distribuição alvo. Segue na Figura \ref{fig:warmup}, a segunda metade dos valores de 4 CM simuladas para estimação do valor de $\tau$ representadas em cores diferentes. O fato de estarem todas sobrepostas é um ótimo sinal de convergência das sequências.
 
 # CONSIDERAÇÕES FINAIS
+
+Levando em consideração os resultados obtidos a partir da análise descritiva e ajuste do modelo verificamos que os pacientes perderam parte da acuidade visual durante o tempo do experimento o que vaide acordo com a característica da doença. Contudo essa perda foi mais grave entre os pacientes que estavam sob o tratamento do *interferon*$-\alpha$. Dessa forma temos evidências a favor de que os resultados da droga *interferon*$-\alpha$ não são adequados para competir com o atual presente no mercado, pelo menos na dosagem administrada na qual temos os dados. Podemos ver que a metodologia de inferência proposta se adequou a estrutura do modelo, visto que obtivemos a convergência das sequência de forma consistente.
+
+\newpage
 
 # Referências
