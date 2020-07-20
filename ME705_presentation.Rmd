@@ -120,7 +120,7 @@ update(bw1, xlim = xlims, pch = "|")
  Análise Descritiva
 ========================================================
 
-* Matriz de Variâncias e Covariâncias
+* **Matriz de Variâncias e Covariâncias**
 
 ```{r varcov_sample,echo = FALSE,warning=FALSE,message=FALSE}
 # Calcula as matrizes de variâncias e covariâncias e de correlações amostrais
@@ -134,7 +134,7 @@ round(varx,2)
  Análise Descritiva
 ========================================================
 
-*  Matriz de Correlações
+*  **Matriz de Correlações**
 
 ```{r corr_sample,echo = FALSE,warning=FALSE,message=FALSE}
 corr <- round(cor(visual.x, use = "complete.obs"),2)
@@ -181,7 +181,9 @@ $$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \be
 Modelo Proposto
 ========================================================
 
-* $b_{0i}$ é o efeito aleatório específico para cada paciente. Tal que $b_{0i} \sim \cal{N}(\text{0}, \ \tau) \ \forall$ i;
+$$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \beta _4 x_{2it} x_{3i} + b_{0i} + \xi _{it},$$
+
+* $b_{0i}$ é o efeito aleatório específico para cada paciente. Tal que $b_{0i} \overset{\small{iid}}{\sim} \cal{N}(\text{0}, \ \tau) \ \forall$ i;
 * $\xi _{it}$ é o erro aleatório. Tal que  $\xi _{it} \overset{\small{iid}}{\sim} \cal{N}(\text{0}, \ \sigma ^\text{2}) \ \forall$ i e t;
 * $b_{0i}$ representa uma variação especifica do $\beta _0$ para cada paciente.
 
@@ -239,8 +241,216 @@ $$
 \end{pmatrix}
 $$
 
-Slide With Plot
+Inferência
 ========================================================
 
+**Cadeias de Markov** (CM)
+
+* Sequência de variáveis aleatórias discretas  
+* Espaço de estados denotado por S=$\{s_1,s_2,\dots,s_k\}$
+
+Se vale ,
+$$p(X_t | X_{t-1},X_{t-2},\dots,X_{0})=p(X_t | X_{t-1}),$$
+para t$=1,2,\dots,$ a sequência de variáveis aleatórias é uma CM.
+
+A probabilidade que o processo mude de $X_{t} = s_i$ para $X_{t+1} = s_j$ é dada pela matriz de transição, $P=\{p_{ij}\}$.  
+A restrição natural sobre a matriz de transição é que a soma das linhas seja 1, $\sum_j p_{ij} = 1$, para todo $i$.  
+Uma CM admite uma distribuição de equilíbrio $\boldsymbol{\pi}$ se existir $\boldsymbol{\pi}$ tal que $\boldsymbol{\pi} = \boldsymbol{\pi} P$.
+
+Inferência
+========================================================
+
+* **Irredutibilidade**
+
+Uma CM, cujas as variáveis aleatórias são discretas, é dita irredutível se for uma cadeia em que partindo-se de um estado qualquer, pode-se atingir qualquer estado, inclusive o inicial, em um número finito de transições.
+
+* **Reversibilidade**
+
+Uma CM é dita reversível se a probabilidade de estar em um estado $s_i$ e mover-se para $s_j$ é igual à probabilidade de estar no estado $s_j$ e mover-se para o estado $s_i$, ou seja,
+$$\boldsymbol{\pi}(i)p(i,j) = \boldsymbol{\pi}(j)p(j,i)$$
+A reversibilidade de uma CM está associada ao fato da mesma admitir uma distribuição de equilíbrio.
+
+Inferência
+========================================================
+
+* **Amostrador de Gibbs**
+
+O Amostrador de Gibbs (AG) é um método para aproximar uma distribuição multivariada tomando somente amostras de distribuições univariadas.
+
+Suponha que a distribuição a posteriori tenha função de densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para os $p$ parâmetros $\theta_1, \theta_2, \dots,\theta_p$ e seja $\pi(\theta_i | \theta_1, \dots, \theta_{i-1}, \theta_{i+1}, \dots,\theta_p)$ a função densidade condicional para $\theta_i$ dado os valores dos outros parâmetros.
+
+Inferência
+========================================================
+
+* **Amostrador de Gibbs**
+
+Tomando arbitrariamente valores iniciais $\{\theta_1(0), \theta_2(0), \dots,\theta_p(0)\}$ para os $p$ parâmetros e em seguida mudá-los um a um selecionando novos valores como segue:
+$$\theta_1(1) \quad \text{é escolhido de} \quad \pi(\theta_1 | \theta_2(0), \theta_3(0), \dots,\theta_p(0))$$
+$$\theta_2(1) \quad \text{é escolhido de} \quad \pi(\theta_2 | \theta_1(1), \theta_3(0), \dots,\theta_p(0))$$
+$$\theta_3(1) \quad \text{é escolhido de} \quad \pi(\theta_3 | \theta_1(1), \theta_2(1), \theta_4(0) \dots,\theta_p(0))$$
+$$\vdots$$
+$$\theta_p(1) \quad \text{é escolhido de} \quad \pi(\theta_p | \theta_1(1), \theta_2(1), \dots,\theta_{p-1}(1))$$
+
+Inferência
+========================================================
+
+* **Metropolis - Hastings**
+
+Deve-se construir um núcleo de transição $p(\theta,\phi)$ de forma que $\pi$ seja a distribuição de equilíbrio da cadeia. Uma forma simples de fazer isso é através de cadeias onde o núcleo $p$ satisfaça 
+$$\pi(\theta)p(\theta,\phi) = \pi(\phi)p(\phi,\theta), \quad \forall \quad (\theta,\phi)$$
+Embora não seja necessária, ela é suficiente para que $\pi$ seja a distribuição de equilíbrio da cadeia.
+
+Inferência
+========================================================
+
+* **Metropolis - Hastings**
+
+O núcleo $p(\theta,\phi)$ é constituído de 2 elementos: um núcleo de transição arbitrário $q(\theta,\phi)$ e uma probabilidade $\alpha(\theta,\phi)$ de forma que,
+$$p(\theta,\phi) = q(\theta,\phi)\alpha(\theta,\phi), \quad \text{se} \quad \theta \ne \phi$$
+Portanto, o núcleo de transição define uma densidade $p(\theta, .)$ para todos os valores diferentes de $\theta$. Consequentemente, resta uma probabilidade positiva da cadeia ficar em $\theta$ dada por
+$$p(\theta,\theta) = 1 - \int q(\theta,\phi)\alpha(\theta,\phi)\text{d}\phi$$
+A expressão mais comum para a probabilidade de aceitação é 
 $$\alpha(\theta,\phi) = min\{1,\frac{\pi(\phi)\text{q}(\phi,\theta)}{\pi(\theta)\text{q}(\theta,\phi)}\}$$
 
+Inferência
+========================================================
+
+* **Metropolis - Hastings**
+
+Em termos práticos a simulação de uma amostra de $\pi$ usando a CM:
+
+i) inicialize o contador de iterações da cadeia $j = 1$ e tome um valor arbitrário para $\theta{(0)}$;
+
+ii) mova a cadeia para um novo valor $\phi$ gerado da densidade $q(\theta{(j-1)},.)$ ;
+
+iii) calcule a probabilidade de aceitação do movimento $\alpha(\theta{(j-1)},\phi)$ . Se o movimento for aceito, $\theta{(j)} = \phi$, caso contrário $\theta{(j)} = \theta{(j-1)}$ e a cadeia não se move;
+
+iv) mude o contador de $j$ para $j+1$ e retorne ao item ii) até a convergência.
+
+Inferência
+========================================================
+
+* **Metropolis - Hastings**
+
+A etapa iii) é realizada após a geração de uma quantidade uniforme $u \sim U(0,1)$ independente de todas as outras variáveis. Se $u \le \alpha$, o movimento é aceito e se $u > \alpha$ o movimento não é permitido.
+
+Inferência
+========================================================
+
+* **Metropolis-within-Gibbs**
+
+O AG pode ser visto como um caso particular do Metropolis-Hastings (MH) onde as distribuições geradoras de candidatos são as condicionais da distribuição de interesse e o candidato é aceito com probabilidade 1.
+
+Considere a situação em que para um vetor aleatório com K elementos, sendo que alguns deles tem densidades condicionais bem definidas e fáceis de gerar, enquanto que os demais não tem esta  facilidade. 
+
+Neste caso podemos fazer uso combinado do AG para as variáveis fáceis de gerar e do MH para as demais.
+
+Resultados
+========================================================
+
+```{r include=FALSE}
+# MAKE DESIGN MATRIX
+X <- unname(model.matrix(~1+visual0+time+treat.f+treat.f:time,armd))
+attr(X,"assign") <- NULL
+Z <- matrix(1,nrow = nrow(X),ncol=1)
+
+# MAKE STAN DATA
+stanDat <- list(N = nrow(X),
+                P = ncol(X),
+                nr = ncol(Z),
+                X = X,
+                Z = Z,
+                Time = nlevels(armd$time.f),
+                M = nlevels(armd$treat.f),
+                I = nlevels(armd$subject),
+                patient = as.integer(armd$subject),
+                visual = as.integer(armd$visual),
+                visual0 = as.integer(armd$visual0),
+                time = as.integer(armd$time.f),
+                treat = as.integer(armd$treat.f))
+
+# FIT THE MODEL
+matrixFit <- stan(file = "matrixModel.stan",
+                  data=stanDat,
+                  iter = 2000, chains = 4)
+```
+
+```{r}
+estimate_table <- round(summary(matrixFit,pars = c("beta","sigma_e","sigma_p"))$summary,2)
+colnames(estimate_table)[1:3] <- c("Média", "DP da média", "DP")
+```
+
+```{r}
+kable(estimate_table,
+      align = "c",
+      caption = "Resultados do ajuste do modelo.") %>%
+  kable_styling(latex_options = "HOLD_position",
+                font_size = 8) %>% 
+  kable_styling(latex_options = "scale_down")
+```
+
+Resultados
+========================================================
+
+```{r}
+D <- diag(round(sqrt(sum(estimate_table[c("sigma_e","sigma_p"),"Média"]**2)),2),nrow = 4)
+S <- matrix(round(estimate_table["sigma_p","Média"]**2,2),ncol = 4,nrow = 4)
+diag(S) <- round(sum(estimate_table[c("sigma_e","sigma_p"),"Média"]**2),2)
+Dinv <- solve(D)
+corr_mtrx <- round(Dinv%*%S%*%Dinv,2)
+```
+
+**Estimativa da Matriz de Variâncias e Covariâncias Condicionais:**
+
+$$
+\begin{pmatrix}
+`r round(estimate_table["sigma_e","Média"]**2,2)` & 0 & 0 & 0 \\
+0 & `r round(estimate_table["sigma_e","Média"]**2,2)` & 0 & 0 \\
+0 & 0 & `r round(estimate_table["sigma_e","Média"]**2,2)` & 0 \\
+0 & 0 & 0 & `r round(estimate_table["sigma_e","Média"]**2,2)` \\
+\end{pmatrix}
+$$
+
+Resultados
+========================================================
+
+**Estimativa da Matriz de Variâncias e Covariâncias Marginais:**
+
+$$
+\begin{pmatrix}
+`r round(sum(estimate_table[c("sigma_e","sigma_p"),"Média"]**2),2)` & `r round(estimate_table["sigma_p","Média"]**2,2)` & `r round(estimate_table["sigma_p","Média"]**2,2)` & `r round(estimate_table["sigma_p","Média"]**2,2)` \\
+`r round(estimate_table["sigma_p","Média"]**2,2)` & `r round(sum(estimate_table[c("sigma_e","sigma_p"),"Média"]**2),2)` & `r round(estimate_table["sigma_p","Média"]**2,2)` & `r round(estimate_table["sigma_p","Média"]**2,2)` \\
+`r round(estimate_table["sigma_p","Média"]**2,2)` & `r round(estimate_table["sigma_p","Média"]**2,2)` & `r round(sum(estimate_table[c("sigma_e","sigma_p"),"Média"]**2),2)` & `r round(estimate_table["sigma_p","Média"]**2,2)` \\
+`r round(estimate_table["sigma_p","Média"]**2,2)` & `r round(estimate_table["sigma_p","Média"]**2,2)` & `r round(estimate_table["sigma_p","Média"]**2,2)` & `r round(sum(estimate_table[c("sigma_e","sigma_p"),"Média"]**2),2)` \\
+\end{pmatrix}
+$$
+
+Resultados
+========================================================
+
+**Estimativa da Matriz de Correlações:**
+
+$$
+\begin{pmatrix}
+`r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` \\
+`r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` \\
+`r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` \\
+`r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` \\
+\end{pmatrix}
+$$
+
+Resultados
+========================================================
+
+```{r warmup, fig.cap="Gráfico mostrando o resultado sobre convergência da CM, após descartado o warm-up.", fig.pos="H"}
+traceplot(matrixFit,pars=c("sigma_p"))
+```
+
+Considerações Finais
+========================================================
+
+* A partir da análise descritiva e ajuste do modelo verificamos que os pacientes perderam parte da acuidade visual durante o tempo do experimento o que vai de acordo com a característica da doença;
+
+* Essa perda foi mais grave entre os pacientes que estavam sob o tratamento do *interferon*$-\alpha$;
+
+* Podemos ver que a metodologia de inferência proposta se adequou a estrutura do modelo, visto que obtivemos a convergência das sequência de forma consistente.

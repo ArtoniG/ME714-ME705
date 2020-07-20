@@ -165,7 +165,7 @@ $$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \be
 Modelo Proposto
 ========================================================
 
-* $b_{0i}$ é o efeito aleatório específico para cada paciente. Tal que $b_{0i} \sim \cal{N}(\text{0}, \ \tau) \ \forall$ i;
+* $b_{0i}$ é o efeito aleatório específico para cada paciente. Tal que $b_{0i} \overset{\small{iid}}{\sim} \cal{N}(\text{0}, \ \tau) \ \forall$ i;
 * $\xi _{it}$ é o erro aleatório. Tal que  $\xi _{it} \overset{\small{iid}}{\sim} \cal{N}(\text{0}, \ \sigma ^\text{2}) \ \forall$ i e t;
 * $b_{0i}$ representa uma variação especifica do $\beta _0$ para cada paciente.
 

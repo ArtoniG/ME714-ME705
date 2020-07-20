@@ -484,7 +484,7 @@ Como descrito na seção de metologia para diminuir a influência dos valores in
 
 # CONSIDERAÇÕES FINAIS
 
-Levando em consideração os resultados obtidos a partir da análise descritiva e ajuste do modelo verificamos que os pacientes perderam parte da acuidade visual durante o tempo do experimento o que vaide acordo com a característica da doença. Contudo essa perda foi mais grave entre os pacientes que estavam sob o tratamento do *interferon*$-\alpha$. Dessa forma temos evidências a favor de que os resultados da droga *interferon*$-\alpha$ não são adequados para competir com o atual presente no mercado, pelo menos na dosagem administrada na qual temos os dados. Podemos ver que a metodologia de inferência proposta se adequou a estrutura do modelo, visto que obtivemos a convergência das sequência de forma consistente.
+Levando em consideração os resultados obtidos a partir da análise descritiva e ajuste do modelo verificamos que os pacientes perderam parte da acuidade visual durante o tempo do experimento o que vai de acordo com a característica da doença. Contudo essa perda foi mais grave entre os pacientes que estavam sob o tratamento do *interferon*$-\alpha$. Dessa forma temos evidências a favor de que os resultados da droga *interferon*$-\alpha$ não são adequados para competir com o atual presente no mercado, pelo menos na dosagem administrada na qual temos os dados. Podemos ver que a metodologia de inferência proposta se adequou a estrutura do modelo, visto que obtivemos a convergência das sequência de forma consistente.
 
 \newpage
 
