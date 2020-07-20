@@ -3,7 +3,11 @@ title: "Modelos de Regressão Linear Mistos para dados discretos: Uma abordagem 
 author: 
   - Felipe Vieira - RA 160424
   - Guilherme Artoni - RA 160318
-output: beamer_presentation
+output: 
+  beamer_presentation:
+    theme: "Singapore"
+    colortheme: "seagull"
+    fonttheme: "structurebold"
 header-includes:
   - \usepackage[utf8]{inputenc}
   - \usepackage[brazil, english, portuguese]{babel}
