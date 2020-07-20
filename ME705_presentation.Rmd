@@ -173,10 +173,10 @@ Modelo Proposto
 $$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \beta _4 x_{2it} x_{3i} + b_{0i} + \xi _{it},$$
 
 * $\beta _0$ é o intercepto geral;
-* $\beta _1$ é o incremento positivo ou negativo no valor esperado de $Y_{it}$ quando variado em uma unidade o valor inicial da qualidade da visão;
-* $\beta _2$ é o incremento positivo ou negativo na valor esperado de $Y_{it}$, quando acrescido o tempo em uma semana entre as que foram observadas;
-* $\beta _3$ é o efeito geral positivo ou negativo no valor esperado de $Y_{it}$ causado pelo tratamento;
-* $\beta _4$ é o incremento positivo ou negativo sobre o valor esperado de $Y_{it}$, gerado pela variação do tempo em uma semana entre as que foram observadas sobre o paciente i que estava sob tratamento.
+* $\beta _1$ é o incremento no valor esperado de $Y_{it}$ quando variado em uma unidade o valor inicial da qualidade da visão;
+* $\beta _2$ é o incremento no valor esperado de $Y_{it}$, quando acrescido o tempo em uma semana entre as que foram observadas;
+* $\beta _3$ é o efeito geral no valor esperado de $Y_{it}$ causado pelo tratamento;
+* $\beta _4$ é o incremento sobre o valor esperado de $Y_{it}$, gerado pela variação do tempo em uma semana entre as que foram observadas sobre o paciente i que estava sob tratamento.
 
 Modelo Proposto
 ========================================================
@@ -347,6 +347,8 @@ Neste caso podemos fazer uso combinado do AG para as variáveis fáceis de gerar
 
 Resultados
 ========================================================
+
+$$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \beta _4 x_{2it} x_{3i} + b_{0i} + \xi _{it},$$
 
 ```{r include=FALSE}
 # MAKE DESIGN MATRIX
