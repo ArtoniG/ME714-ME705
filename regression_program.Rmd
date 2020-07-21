@@ -1,46 +1,46 @@
 ---
-title: "Modelos de Regressão Linear Mistos para dados discretos: Uma abordagem utilizando MCMC através do Stan integrado ao R."
+  title: "Modelos de Regressão Linear Mistos para dados discretos: Uma abordagem utilizando MCMC através do Stan integrado ao R."
 author: 
-  - Guilherme Artoni - RA160318
-  - Citzen4 - RAXXXXXX
-  - Student - RAXXXXXX
-  - Malba Tahan - RAXXXXXX
+  - Felipe Vieira - RA 160424
+  - Guilherme Artoni - RA 160318
+  - Matheus Mendes Galvão - RA 158260
+  - Rodrigo Fonseca de Carvalho - RA 137525
 bibliography: referencia.bib
 output: 
   bookdown::pdf_document2:
-    toc: FALSE
-  fig_crop: no
+  toc: FALSE
+fig_crop: no
 fontsize: 10pt
 sansfont: Times
 documentclass: article
 geometry: 
- - a4paper
- - textwidth=18cm
- - textheight=21cm
+  - a4paper
+- textwidth=18cm
+- textheight=21cm
 header-includes:
   - \usepackage[utf8]{inputenc}
-  - \usepackage[brazil, english, portuguese]{babel}
-  - \usepackage[utf8]{inputenc}
-  - \usepackage[T1]{fontenc}
-  - \usepackage[fixlanguage]{babelbib}
-  - \usepackage{times}
+- \usepackage[brazil, english, portuguese]{babel}
+- \usepackage[utf8]{inputenc}
+- \usepackage[T1]{fontenc}
+- \usepackage[fixlanguage]{babelbib}
+- \usepackage{times}
 
-  - \usepackage{graphicx}
-  - \usepackage{wrapfig}
-  - \usepackage{pdfpages}
-  
-  - \usepackage{amsfonts}
-  - \usepackage{amssymb}
-  - \usepackage{amsmath}
-  
-  - \usepackage{fancyhdr}
-  - \usepackage{subcaption}
-  - \usepackage{booktabs}
-  - \usepackage{caption}
-  - \usepackage{float}
+- \usepackage{graphicx}
+- \usepackage{wrapfig}
+- \usepackage{pdfpages}
+
+- \usepackage{amsfonts}
+- \usepackage{amssymb}
+- \usepackage{amsmath}
+
+- \usepackage{fancyhdr}
+- \usepackage{subcaption}
+- \usepackage{booktabs}
+- \usepackage{caption}
+- \usepackage{float}
 ---
-
-```{r setup, include=FALSE}
+  
+  ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE,
                       warning = FALSE,error = FALSE,
                       fig.align = "center",
@@ -55,16 +55,187 @@ library(nlmeU)
 library(lattice)
 library(rstanarm)
 library(rstan)
+library(tidyverse)
+library(kableExtra)
 source('resid_anal_nlme.R')
 source('cook_hat.R')
 source('norm_diag.R')
 source('envel_norm.R')
 source('statistics_model_comparison.R')
+
+# FUNCAO QUE PRINTA UM OBJETO MATRIX EM FORMATO LATEX
+bmatrix = function(x, digits=NULL, ...) {
+  library(xtable)
+  default_args = list(include.colnames=FALSE, only.contents=TRUE,
+                      include.rownames=FALSE, hline.after=NULL, comment=FALSE,
+                      print.results=FALSE)
+  passed_args = list(...)
+  calling_args = c(list(x=xtable(x, digits=digits)),
+                   c(passed_args,
+                     default_args[setdiff(names(default_args), names(passed_args))]))
+  cat("\\begin{bmatrix}\n",
+      do.call(print.xtable, calling_args),
+      "\\end{bmatrix}\n")
+}
 ```
 
-The Stan project develops a probabilistic programming language that implements full Bayesian statistical inference via Markov Chain Monte Carlo, rough Bayesian inference via 'variational' approximation, and (optionally penalized) maximum likelihood estimation via optimization. In all three cases, automatic differentiation is used to quickly and accurately evaluate gradients without burdening the user with the need to derive the partial derivatives.
+# INTRODUÇÃO
 
-```{r,warning=FALSE,message=FALSE}
+A degeneração macular relacionada à idade (DMRI) é uma doença atualmente sem cura que ocorre em uma parte da retina chamada mácula e que leva a perda progressiva da visão central. A DMRI é uma alteração muito comum em pessoas com mais de 55 anos, sendo a causa mais frequente de baixa acuidade visual nessa faixa etária. A partir dos dados disponibilizados pelo Grupo de Estudo de Terapias Farmacológicas para Degeneração Macular (GETFDM) em 1997, iremos avaliar se um novo medicamento para DMRI tem poder competitivo com o principal existente no mercado. Trata-se de informações sobre ensaios clínicos aleatorizados realizados em diferentes centros de estudos. Durante os ensaios, a qualidade da visão de cada um dos 240 pacientes foi medida no início e após 4, 12, 24 e 52 semanas. A qualidade da visão foi medida através da quantidade de letras que os pacientes foram capazes de ler em gráficos de visão padronizados. Estes referem-se a panéis com várias letras agrupadas em linhas, de modo que o tamanho das letras diminui de cima para baixo à medida que o número de letras aumenta de cima para baixo. O objetivo era comparar um tratamento experimental chamado *interferon*$-\alpha$ e o placebo para pacientes diagnosticados com DMRI. Os dados mostrados são em relação ao placebo e a maior dose administrada do *interferon*$-\alpha$. Segue que temos dados longitudinais para cada paciente em forma de medidas da qualidade de sua visão.  
+Facilmente encontramos na literatura que uma das abordagens utilizadas para modelar este tipo de estudo com medidas repetidas são modelos conhecidos como modelos de efeitos aleatórios ou modelos mistos (MM), como podemos encontrar nos trabalhos de @gelman, @manly, @gamerman e @singer. A estrutura deste tipo de modelo considera não somente efeitos fixos e a componente dos erros, como também uma componente aleatória que incorpora a variabilidade do comportamento individual da i-ésima unidade experimental. Este tipo de estrutura tem diversas aplicações, tais como em modelos lineares hierárquicos e modelos de efeitos contextuais utilizados em estudos nas áreas da Educação e Sociologia respectivamente.  
+Afim de obter os resultados do ajuste do modelo utilizaremos uma abordagem da Inferência Bayesiana, através do método Monte Carlo Markov Chain (MCMC) implementado no software Stan integrado ao software R por meio do pacote *rstan*. Segundo @sorensen o Stan fornece um conjunto de ferramentas escaláveis para ajustar modelos na maioria das aplicações padrões de MM.  
+No que segue apresentaremos a metodologia utilizada para investigar os desempenhos de ambos tratamentos, ou seja a estrutura dos modelo mistos, o método MCMC, uma análise descritiva dos dados, o modelo proposto, assim como os resultados obtidos com o mesmo.
+
+\newpage
+
+# METODOLOGIA
+
+## MODELO MISTO
+
+Conforme discutido em @singer, em geral podemos analisar dados provenientes de estudos com medidas repetidas por meio de modelos mistos da forma:
+  
+  $$\boldsymbol{Y}_{j(k_{j} \ \text{x} \ 1)} = \boldsymbol{X}_{j(k_{j} \ \text{x} \ p)}\boldsymbol{\beta}_{(p \ \text{x} \ 1)} + \boldsymbol{Z}_{j(k_{j} \ \text{x} \ q)}\boldsymbol{b}_{j(q \ \text{x} \ 1)}+\boldsymbol{\xi}_{j(k_{j} \ \text{x} \ 1)}$$
+  Onde j = 1,2,...,n é o individuo
+\begin{itemize}
+\item $\boldsymbol{Y}_{j} = (y_{j1},...,y_{jk_{j}})$, onde $k_{j}$:numero de avaliações realizadas no individuo j.
+\item $\boldsymbol{X}_{j}$: matriz de planejamento associada aos efeitos fixos para o indivíduo j.
+\item $\boldsymbol{\beta}$: vetor de efeitos fixos
+\item $\boldsymbol{Z}_{j}$: matriz de planejamento associada aos efeitos aleatórios para o indivíduo j.
+\item $\boldsymbol{b}_{j}$: vetor de efeitos aleatórios associado ao indivíduo j.
+\item $\boldsymbol{\xi}_{j}$: vetor de erros associado ao indivíduo j.
+\end{itemize}
+
+Em muitos casos é razoável supor que 
+$$ \boldsymbol{b}_j  \sim \boldsymbol{\cal{N}}_{k}( \boldsymbol{0},\boldsymbol{\cal{D)}} \;\; e \;\; \boldsymbol{\xi}_j \sim \boldsymbol{\cal{N}}_{n_i}( \boldsymbol{0}, \boldsymbol{\Sigma_j})$$
+                                                     em que $\boldsymbol{\cal{D}}$ e $\boldsymbol{\Sigma_j}$ são matrizes simétricas definidas positivas e, além disso, que $\boldsymbol{b}_j$ e $\boldsymbol{\xi}_j$ são variáveis aleatórias independentes.
+                                                   
+                                                   Sob esse modelo, o vetor de respostas associado à i-ésima unidade amostral tem distribuição normal multivariada com vetor de médias e matriz de covariâncias dados, respectivamente por
+                                                   $$E(\boldsymbol{Y}_{j}) = \boldsymbol{X}_{j}\boldsymbol{\beta}$$
+                                                     e
+                                                   $$V(\boldsymbol{Y}_{j}) = \boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'} + \boldsymbol{\Sigma_j}$$
+Em que primeira componente $\boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'}$ modela a dispersão dos perfis individuais de resposta e a segunda componente $\boldsymbol{\Sigma_j}$ está relacionada com a dispersão da resposta em torno dos perfis individuais.
+                                                   
+                                                   ### MODELO PARA A ESTRUTURA DE COVARIÂNCIA
+                                                   
+                                                   Grande parte do esforço empregado na modelagem de dados com medidas repetidas se concentram na estrutura de covariância. Em geral, o modelo para a matriz de covariâncias $\boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'} + \boldsymbol{\Sigma_j}$ deve depender da maneira pela qual as observações foram obtidas e do conhecimento sobre o mecanismo gerador das observações. Quando $\boldsymbol{\Sigma_j} = \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_{n_j}$ o modelo é chamado de modelo de independência condicional homocedástico, indicando que as $n_j$ observações da j-ésima unidade amostral são condicionalmente independentes dado $b_j$.
+
+Das possíveis estruturas de covariância disponíveis na literatura estatística, adotaremos a Estrutura Uniforme, tomando $n_j = 4$ temos 
+
+$$\boldsymbol{\cal{V}}_\text{j} \equiv \boldsymbol{Z}_\text{j} \boldsymbol{\cal{D}} \boldsymbol{Z}_\text{j}^{\boldsymbol{'}} + \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_{n_j}$$
+  
+  \begin{equation*}
+= \begin{pmatrix}
+  1 \\
+  1 \\
+  1 \\
+  1 \\
+  \end{pmatrix} \tau \begin{pmatrix}
+  1 & 1 & 1 & 1
+  \end{pmatrix} + \begin{pmatrix}
+  \sigma^\textbf{2} & 0 & 0 & 0 \\
+  0 & \sigma^\textbf{2} & 0 & 0 \\
+  0 & 0 & \sigma^\textbf{2} & 0 \\
+  0 & 0 & 0 & \sigma^\textbf{2} \\
+  \end{pmatrix}
+  % \quad
+  = \begin{pmatrix}
+  \sigma^{\textbf{2}} + \tau & \tau & \tau & \tau \\
+  \tau & \sigma^{\textbf{2}} + \tau & \tau & \tau \\
+  \tau & \tau & \sigma^{\textbf{2}} + \tau & \tau \\
+  \tau & \tau & \tau & \sigma^{\textbf{2}} + \tau \\
+  \end{pmatrix}
+  \end{equation*}
+  
+  Pela estrutura da matriz de variâncias e covariâncias temos um coeficiente de correlação comum para todos os pares de variáveis $\varrho = \tau / (\sigma^2 + \tau)$. Pelo fato do $\tau$ ser não negativo, implica que $\varrho$ é também não negativo.
+  
+  
+  ## INFERÊNCIA BAYESIANA
+  
+  Segundo @manly a ideia básica por trás da Inferência Bayesiana é mudar as probabilidades para os parâmetros tomando valores númericos específicos para novas probabilidades como um resultado da coleta de mais dados, com essa mudança sendo alcançada através do Teorema de Bayes.
+  Como um exemplo da abordagem Bayesiana, suponha que temos interesse no valor de um parâmetro $\theta$ de uma determinada população, e que antes de qualquer informação ser observada é de alguma forma possível afirmar que $\theta$ deve assumir um dos valores entre $\theta_1$, $\theta_1$, $\dots$, $\theta_n$ e que a probabilidade de o valor ser $\theta_i$ é $\pi(\theta_i)$.
+  Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$. Então o Teorema de Bayes afirma que a probabilidade de $\theta$ ser igual a $\theta_i$, dado novas observações, é 
+  $$\pi(\theta_i|dados) = \frac{\pi(dados|\theta_i)p(\theta_i)}{\sum_{j=1}^n \pi(data|\theta_j)\pi(\theta_j)},$$
+    onde $\pi(\theta_i|dados)$ é a distribuição a posteriori de $\theta$. Contudo frequentemente lidamos com situações em que vários parâmetros estão envolvidos, de tal forma que no geral
+  $$\pi(\theta_1, \theta_2, \dots,\theta_p | dados) \propto \pi(dados | \theta_1, \theta_2, \dots,\theta_p)\pi(\theta_1, \theta_2, \dots,\theta_p),$$
+    ou seja, a distribuição a posteriori de vários parâmetros dado um conjunto de dados é proporcional a probabilidade dos dados quando conhecidos os parâmetros  multiplicada pela probabilidade a priori dos parâmetros.
+  
+  ## MONTE CARLO MARKOV CHAIN
+  
+  ### INTRODUÇÃO ÀS CADEIAS DE MARKOV
+  
+  Considere uma sequência de variáveis aleatórias discretas $\{X_0,X_1,X_2,\dots\}$ e espaço de estados denotado por S=$\{s_1,s_2,\dots,s_k\}$. A sequência de variáveis aleatórias $\{X_0,X_1,X_2,\dots\}$ é uma Cadeia de Markov (CM), se 
+  $$p(X_t | X_{t-1},X_{t-2},\dots,X_{0})=p(X_t | X_{t-1}),$$
+    para t$=1,2,\dots,$ ou seja, dada $X_{t-1}$, a distribuição de $X_{t}$ independe de suas predecessoras, $X_{t-2},X_{t-3}, \dots$.
+  Em um instante t qualquer, a probabilidade que o processo mude de um estado $X_{t} = s_i$ para um estado $X_{t+1} = s_j$ é dada pela matriz de transição, $P=\{p_{ij}\}$. A restrição natural sobre a matriz de transição é que a soma das linhas seja 1, $\sum_j p_{ij} = 1$, para todo $i$.  
+  Uma CM admite uma distribuição de equilíbrio $\boldsymbol{\pi}$ se existir $\boldsymbol{\pi}$ tal que $\boldsymbol{\pi} = \boldsymbol{\pi} P$.
+  
+  **IRREDUTIBILIDADE**
+    
+    Uma CM, cujas as variáveis aleatórias são discretas, é dita irredutível se for uma cadeia em que partindo-se de um estado qualquer, pode-se atingir qualquer estado, inclusive o inicial, em um número finito de transições.
+  
+  **REVERSIBILIDADE**
+    
+    Uma CM é dita reversível se a probabilidade de estar em um estado $s_i$ e mover-se para $s_j$ é igual à probabilidade de estar no estado $s_j$ e mover-se para o estado $s_i$, ou seja,
+  $$\boldsymbol{\pi}(i)p(i,j) = \boldsymbol{\pi}(j)p(j,i)$$
+    A denominação reversível se deve ao fato que, atendida a condição acima, a mesma lei de transição se aplica à cadeia tanto no sentido natural de evolução do tempo, $t, t+1, t+2, \dots,$ quanto no sentido contrário $t, t-1, t-2, \dots$. A reversibilidade de uma CM está associada ao fato da mesma admitir uma distribuição de equilíbrio.
+  
+  ### AMOSTRADOR DE GIBBS
+  
+  O Amostrador de Gibbs (AG) é um método para aproximar uma distribuição multivariada tomando somente amostras de distribuições univariadas. O benefício deste método com Inferência Bayesiana é que torna relativamente fácil amostrar de uma distribuição a posteriori multivariada até mesmo quando o número de parâmetros envolvidos é muito grande.
+  
+  Suponha que a distribuição a posteriori tenha função de densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para os $p$ parâmetros $\theta_1, \theta_2, \dots,\theta_p$ e seja $\pi(\theta_i | \theta_1, \dots, \theta_{i-1}, \theta_{i+1}, \dots,\theta_p)$ a função densidade condicional para $\theta_i$ dado os valores dos outros parâmetros. O problema então é gerar um grande número de amostras aleatórias da distribuição a posteriori com o objetivo de aproximar a própria distribuição e  distribuições de várias funções dos parâmetros. Isto é feito tomando arbitrariamente valores iniciais $\{\theta_1(0), \theta_2(0), \dots,\theta_p(0)\}$ para os $p$ parâmetros e em seguida mudá-los um a um selecionando novos valores como segue:
+    $$\theta_1(1) \quad \text{é escolhido de} \quad \pi(\theta_1 | \theta_2(0), \theta_3(0), \dots,\theta_p(0))$$
+    $$\theta_2(1) \quad \text{é escolhido de} \quad \pi(\theta_2 | \theta_1(1), \theta_3(0), \dots,\theta_p(0))$$
+    $$\theta_3(1) \quad \text{é escolhido de} \quad \pi(\theta_3 | \theta_1(1), \theta_2(1), \theta_4(0) \dots,\theta_p(0))$$
+    $$\vdots$$
+    $$\theta_p(1) \quad \text{é escolhido de} \quad \pi(\theta_p | \theta_1(1), \theta_2(1), \dots,\theta_{p-1}(1))$$
+    Nesse ponto todos os valores iniciais foram substituídos, o que representa um ciclo completo do algoritmo. O processo então é repetido muitas vezes produzindo a sequência $\{\theta_1(1), \theta_2(1), \dots,\theta_p(1)\}, \{\theta_1(2), \theta_2(2), \dots,\theta_p(2)\}, \dots, \{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ a qual caracteriza uma CM, pois em cada etapa do algoritmo a mudança é feita dependendo apenas do valor atual de $\theta$.
+  
+  ### METROPOLIS-HASTINGS
+  
+  Considere uma distribuição $\pi$ da qual se deseja gerar uma amostra através de uma CM. De acordo com @gamerman deve-se construir um núcleo de transição $p(\theta,\phi)$ de forma que $\pi$ seja a distribuição de equilíbrio da cadeia. Uma forma simple de fazer isso é através de cadeias onde o núcleo $p$ satisfaça 
+  $$\pi(\theta)p(\theta,\phi) = \pi(\phi)p(\phi,\theta), \quad \forall \quad (\theta,\phi))$$
+  essa equação é também conhecida como equação de equílibrio detalhado. Embora não seja necessária, ela é suficiente para que $\pi$ seja a distribuição de equilíbrio da cadeia. Como vimos na seção 2.3.1 essa é a condição de reversibilidade da cadeia.  
+O núcleo $p(\theta,\phi)$ é constituído de 2 elementos: um núcleo de transição arbitrário $q(\theta,\phi)$ e uma probabilidade $\alpha(\theta,\phi)$ de forma que,
+$$p(\theta,\phi) = q(\theta,\phi)\alpha(\theta,\phi), \quad \text{se} \quad \theta \ne \phi$$
+  Portanto, o núcleo de transição define uma densidade $p(\theta, .)$ para todos os valores diferentes de $\theta$. Consequentemente, resta uma probabilidade positiva da cadeia ficar em $\theta$ dada por
+$$p(\theta,\theta) = 1 - \int q(\theta,\phi)\alpha(\theta,\phi)\text{d}\phi$$
+  Logo, o núcleo de transição define uma distribuição mista para o novo estado $\phi$ da cadeia. Para $\phi \ne \theta$ essa distribuição tem densidade e para $\phi = \theta$, essa distribuição atribui uma probabilidade positiva.  
+A expressão mais comum para a probabilidade de aceitação é 
+$$\alpha(\theta,\phi) = min\{1,\frac{\pi(\phi)\text{q}(\phi,\theta)}{\pi(\theta)\text{q}(\theta,\phi)}\}$$
+  onde a razão que aparece na expressão é chamada de razão de teste.
+
+Em termos práticos isso significa que a simulação de uma amostra de $\pi$ usando a cadeia de Markov pode ser esquematizada da seguinte forma:
+  
+  i) inicialize o contador de iterações da cadeia $j = 1$ e tome um valor arbitrário para $\theta{(0)}$;
+  
+  ii) mova a cadeia para um novo valor $\phi$ gerado da densidade $q(\theta{(j-1)},.)$ ;
+
+iii) calcule a probabilidade de aceitação do movimento $\alpha(\theta{(j-1)},\phi)$ . Se o movimento for aceito, $\theta{(j)} = \phi$, caso contrário $\theta{(j)} = \theta{(j-1)}$ e a cadeia não se move;
+
+iv) mude o contador de $j$ para $j+1$ e  retorne ao item ii) até a convergência.
+
+A etapa iii) é realizada após a geração de uma quantidade uniforme $u \sim U(0,1)$ independente de todas as outras variáveis. Se $u \le \alpha$, o movimento é aceito e se $u > \alpha$ o movimento não é permitido. O núcleo de transição $q$ define apenas uma proposta de movimento que pode ou não ser confirmado por $\alpha$. Por esse motivo, $q$ é normalmente chamado de proposta e, quando considerado como uma densidade ou distribuição condicional $\text{q} (\theta, .)$ é chamado de densidade ou distribuição condicional proposta.  
+
+### CONEXÃO ENTRE AMOSTRADOR DE GIBBS E METROPOLIS-HASTINGS
+
+O AG pode ser visto como um caso particular do Metropolis-Hastings (MH) onde as distribuições geradoras de candidatos são as condicionais da distribuição de interesse e o candidato é aceito com probabilidade 1. No AG a cadeia está restrita a se mover paralelamente aos eixos enquanto em MH este movimento é livre quando a geração é feita em blocos. Isto se explica em função de no AG atualizarmos um elemento do vetor aleatório por vez, enquanto que no MH isto se faz em bloco.
+
+Considere a situação em que para um vetor aleatório com K elementos, sendo que alguns deles tem densidades condicionais bem definidas e fáceis de gerar, enquanto que os demais não tem esta  facilidade. Neste caso podemos fazer uso combinado do AG para as variáveis fáceis de gerar e do MH para as demais. Esta combinação recebe o nome de Metropolis-within-Gibbs.
+
+O procedimento Metropolis-within-Gibbs, combina aspectos interessantes de MH e AG, gerando direto da distribuição condicional quando for conveniente, caracterizando um passo do AG, e aplicando um passo MH quando a geração direta da condicional for difícil. 
+
+### VANTAGENS E DESVANTAGENS DO MÉTODO
+
+Dois fatores fazem este algoritmo útil. Primeiro que pode ser mostrado que $\{\theta_1(i), \theta_2(i), \dots,\theta_p(i)\}$ segue a distribuição com densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para valores grandes de $i$. Segundo que amostrar observações da distribuição condicional é frequentemente relativamente mais fácil, tornando o método de fácil implementação.
+
+Complicações aparecem por que os conjuntos sucessivos de valores amostrais geradores podem ser correlacionados, porém pode ser resolvido tomando somente valores a partir da r-ésima etapa da sequência, com r grande o suficiente para garantir que os valores tenham correlações negligenciáveis. Paralelamente podem ser geradas várias sequências diferentes com valores iniciais escolhidos aleatoriamente e somente os conjuntos de valores finais $\{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ serem mantidos e comparados. 
+
+# APLICAÇÃO
+
+## ANÁLISE DESCRITIVA
+
+```{r perfis,warning=FALSE,message=FALSE,fig.cap="Gráfico de perifs de alguns indivíduos selecionados aleatoriamente"}
 # Gera os gráficos de perfis
 data(armd.wide, armd0, package = "nlmeU")
 armd0.subset <- subset(armd0, as.numeric(subject) %in% seq(1, 240, 10))
@@ -79,164 +250,160 @@ update(xy1, xlab = "Tempo (em semanas)", ylab = "Qualidade da visão", grid = "h
 # Gera a tabela do número de observações em cada semana
 attach(armd0)
 flst <- list(time.f, treat.f)
-(tN <- tapply(visual, flst, FUN = function(x) length(x[!is.na(x)])))
+tN <- tapply(visual, flst, FUN = function(x) length(x[!is.na(x)]))
 ```
+
+O experimento iniciou-se com 240 pacientes sendo que 119 receberam um placebo e 121 receberam a droga. Com o passar das semanas a quantidade de pessoas no estudo foram diminuindo, fato que é comum neste tipo de experimento dada muitas vezes a dificuldade de acesso dos paciente até os centros de estudo, assim como possíveis efeitos colaterais sentidos em ambos os tratamentos. Por conta disso, ao fim do experimento obtivemos alguns dados faltantes conforme mostra a Tabela \ref{tab:resumo}. 
 
 ```{r,warning=FALSE,message=FALSE}
 # Médias e medianas amostrais das medidas da qualidade da visão para cada semana observada
 tMn <- tapply(visual, flst, FUN = mean)
 tMd <- tapply(visual, flst, FUN = median)
-colnames(res <- cbind(tN, tMn, tMd))
+#colnames(res <- cbind(tN, tMn, tMd))
+res <- cbind(tN, tMn, tMd)
 
 nms1 <- rep(c("P", "A"), 3)
 nms2 <- rep(c("n", "Mean", "Mdn"), rep(2,3))
 colnames(res) <- paste(nms1, nms2, sep = ":")
-res
+#res
 ```
 
-```{r,warning=FALSE,message=FALSE}
+Podemos observar um decrescimento ao longo do tempo das médias e medianas da medida de qualidade da visão  conforme mostra a Figura \ref{fig:boxplot}. Nota-se também um aumento da variabilidade dos dados coletados nas últimas semanas, o aumento no número de dados faltantes pode ser uma possível causa para o crescimento dessa variabilidade. Há também um forte indício de simetria nas distribuições de ambos tratamentos por conta de que médias e medianas apresentaram valores próximos conforme indicado na Tabela \ref{tab:resumo}.
+
+\begin{table}
+\centering
+\resizebox{10cm}{!}{
+  \begin{tabular}{ccccccc}
+  \multicolumn{7}{c}{\textbf{Médias e medianas amostrais das medidas de qualidade da visão}} \\
+  \hline
+  \textbf{Tempo}  & \multicolumn{3}{c|}{\textbf{Placebo}} & \multicolumn{3}{c}{\textbf{Active}}  \\
+  & Núm. de Indiv. & Média & \multicolumn{1}{c|}{Mediana} & Núm. de Indiv. & Média & Mediana \\
+  \cline{2-4}
+  \cline{5-7}
+  Início & 119 & 55,34 & \multicolumn{1}{c|}{56,0} & 121 & 54,58 & 57,0 \\
+  4º semana & 117 & 53,97 & \multicolumn{1}{c|}{54,0} & 114 & 50,91 & 52,0 \\
+  12º semana & 117 & 52,87 & \multicolumn{1}{c|}{53,0} & 110 & 48,67 & 49,5 \\
+  24º semana & 112 & 49,33 & \multicolumn{1}{c|}{50,5} & 102 & 45,46 & 45,0 \\
+  52º semana & 105 & 44,44 & \multicolumn{1}{c|}{44,0} & 90 & 39,10 & 37,0 \\
+  \hline
+  \end{tabular}
+}
+\caption{Número de indivíduos, médias e medianas amostrais das medidas de qualidade da visão de cada tempo observado.}
+\label{tab:resumo}
+\end{table}
+
+```{r boxplot,warning=FALSE,message=FALSE,fig.cap="Boxplots das medidas de qualidade da visão de cada tempo observado."}
 # Gera os boxplots
 bw1 <- bwplot(visual ~ time.f | treat.f, data = armd0)
-xlims <- c("Base", "4\nwks", "12\nwks", "24\nwks", "52\nwks")
+xlims <- c("Base", "4\nsmn", "12\nsmn", "24\nsmn", "52\nsmn")
 update(bw1, xlim = xlims, pch = "|")
 ```
+
 
 ```{r,warning=FALSE,message=FALSE}
 # Calcula as matrizes de variâncias e covariâncias e de correlações amostrais
 visual.x <- subset(armd.wide, select = c(visual0:visual52))
-(varx <- var(visual.x, use = "complete.obs"))
+varx <- var(visual.x, use = "complete.obs")
 
-print(cor(visual.x, use = "complete.obs"), digits = 2)
+#bmatrix(cor(visual.x, use = "complete.obs"), digits = 2)
+
+#bmatrix(varx)
 ```
 
-# MODELO NORMAL INDEPENDENTE HOMOCEDASTICO
+A partir da matriz de variância e covariância $\bold{\Sigma}$ observa-se que há um aumento da variabilidade dos dados coletados nas últimas semanas, em concordância com as informações contidas nos boxplots. Considerando as correlações $\bold{D}$, estas sugerem uma forte ou moderada correlação entre os tratamentos e uma diminuição entre as últimas medidas tomadas, possivelmente consequência dos dados faltantes.
 
-```{r,warning=FALSE,message=FALSE}
-# Ajuste do modelo Normal Independente Homocedástico
-lm.form <- formula(visual ~ -1 + visual0 + time.f + treat.f:time.f)
-lm6.1 <- lm(lm.form, armd)
-```
+* **Matriz de variancias e covariancias e matriz de correlações amostrais:**
+  
+  \begin{equation*}
+\bold{\Sigma} = 
+  \begin{pmatrix}
+220.31 & 206.71 & 196.24 & 193.31 & 152.71 \\ 
+206.71 & 246.22 & 224.79 & 221.27 & 179.23 \\ 
+196.24 & 224.79 & 286.21 & 257.77 & 222.68 \\ 
+193.31 & 221.27 & 257.77 & 334.45 & 285.23 \\ 
+152.71 & 179.23 & 222.68 & 285.23 & 347.43 \\ 
+\end{pmatrix}
+% \quad
+\bold{D} =
+  \begin{pmatrix}
+1.00 & 0.89 & 0.78 & 0.71 & 0.55 \\ 
+0.89 & 1.00 & 0.85 & 0.77 & 0.61 \\ 
+0.78 & 0.85 & 1.00 & 0.83 & 0.71 \\ 
+0.71 & 0.77 & 0.83 & 1.00 & 0.84 \\ 
+0.55 & 0.61 & 0.71 & 0.84 & 1.00 \\ 
+\end{pmatrix}
+\end{equation*}
 
-```{r,warning=FALSE,message=FALSE}
-# Estimativas, Erros Padrão, t-value, p-value, coef. de determinação R² e R² ajustado e interv. conf.
-(summ <- summary(lm6.1))
-summ$sigma
-confint(lm6.1)
-```
+## MODELAGEM
 
-```{r,warning=FALSE,message=FALSE}
-# ANOVA
-anova(lm6.1)
-```
+Vamos considerar agora o seguinte modelo:
+  
+  $$Y_{it} = \beta _0 + \beta _1 x_{1i} + \beta _2 x_{2it} + \beta _3 x_{3i} + \beta _4 x_{2it} x_{3i} + b_{0i} + \xi _{it},$$
+  
+  \begin{itemize}
+\item $Y_{it}$ é a qualidade da visão do paciente i (i = 1, ..., 240) no tempo t (t = 1, 2, 3, 4, correspondendo aos valores 4º, 12º, 24º e 52º semana, respectivamente).
+\item $x_{1i}$ é o valor inicial da qualidade da visão.
+\item $x_{2it}$ é o tempo t de medição no paciente i.
+\item $x_{3i}$ é o indicador do tratamento, 0 se placebo e 1 caso contrário.
+\item $x_{2it} x_{3i}$ é a interação entre as duas covariáveis.
+\end{itemize}
 
-```{r,warning=FALSE,message=FALSE}
-# Análise de Resíduos
-normal_diag(lm6.1) #checa indepedência e homocedásticidade
-```
+\begin{itemize}
+\item $\beta _0$ é o intercepto geral.
+\item $\beta _1$ é o incremento positivo ou negativo no valor esperado de $Y_{it}$ quando variado em uma unidade o valor inicial da qualidade da visão.
+\item $\beta _2$ é o incremento positivo ou negativo na valor esperado de $Y_{it}$, quando acrescido o tempo em uma semana entre as que foram observadas.
+\item $\beta _3$ é o efeito geral positivo ou negativo no valor esperado de $Y_{it}$ causado pelo tratamento.
+\item $\beta _4$ é o incremento positivo ou negativo sobre o valor esperado de $Y_{it}$, gerado pela variação do tempo em uma semana entre as que foram observadas sobre o paciente i que estava sob tratamento.
+\end{itemize}
 
-```{r,warning=FALSE,message=FALSE,include=FALSE}
-envelnorm(lm6.1) #checa normalidade
-```
+\begin{itemize}
+\item $b_{0i}$ é o efeito aleatório específico para cada paciente. Tal que $b_{0i} \sim \cal{N}(\text{0}, \ \tau) \ \forall$ i.
+\item $\xi _{it}$ é o erro aleatório. Tal que  $\xi _{it} \overset{\small{iid}}{\sim} \cal{N}(\text{0}, \ \sigma ^\text{2}) \ \forall$ i e t.
+\item $b_{0i}$ representa uma variação especifica do $\beta _0$ para cada paciente.
+\end{itemize}
 
-```{r,warning=FALSE,message=FALSE}
-cook_hat(lm6.1) #análise de influência e alavancagem
-```
+Em notação matricial, o modelo para o sujeito i com o conjunto completo das quatro medidas da qualidade da visão é expresso por:
+  \begin{equation*}
+\begin{pmatrix}
+Y_{i1} \\
+Y_{i2} \\
+Y_{i3} \\
+Y_{i4} \\
+\end{pmatrix} 
+=  
+  \begin{pmatrix}
+1 & x_{1i} & 4 & x_{3i} & 4x_{3i}\\ 
+1 & x_{1i} & 12 & x_{3i} & 12x_{3i}\\
+1 & x_{1i} & 24 & x_{3i} & 24x_{3i}\\
+1 & x_{1i} & 52 & x_{3i} & 52x_{3i}\\
+\end{pmatrix}
+\begin{pmatrix}
+\beta_0 \\
+\beta_1 \\
+\beta_2 \\
+\beta_3 \\
+\beta_4 \\
+\end{pmatrix} +
+  \begin{pmatrix}
+1 \\
+1 \\
+1 \\
+1 \\
+\end{pmatrix} b_{0t}
++ \begin{pmatrix}
+\xi_{i1} \\
+\xi_{i2} \\
+\xi_{i3} \\
+\xi_{i4} \\
+\end{pmatrix}
+\end{equation*}
 
-# MODELO MISTO FREQUENTISTA
-
-```{r,warning=FALSE,message=FALSE}
-# Ajusta o modelo misto homocedástico, estimativas (Max. Ver. Sim. Restrita), erros padrão, graus de liberdade, t-value, p-value
-lme.form <- formula(visual ~ visual0 + time + treat.f + treat.f:time)
-
-(fm16.1 <- lme(lme.form, random = ~1|subject, data = armd))
-printCoefmat(summary(fm16.1)$tTable, has.Pvalue = T, P.values = T)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Calcula a matriz de variâncias e covariâncias condicional
-getVarCov(fm16.1, type = "conditional", individual = "2")
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Calcula a matriz de variâncias e covariâncias 
-fm16.1cov <- getVarCov(fm16.1, type = "marginal", individual = "2")
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Calcula a matriz de covariâncias
-cov2cor(fm16.1cov[[1]])
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Medida Lesaffre-Verbeke padronizada vs indices
-#residdiag.nlme(fm16.1, limit =2,  plotid = 4)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Resı́duos Marginais padronizados vs Valores ajustados e histograma correspondente
-#residdiag.nlme(fm16.1, limit =2, plotid = 1)
-```
-
-```{r,warning=FALSE,message=FALSE}
-#Plota Resı́duos Condicionais padronizados vs Valores ajustados
-#residdiag.nlme(fm16.1, limit =2, plotid = 5)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# QQ plot (Normal) e histograma dos resı́duos condicionais minimamente confundidos padronizados
-#residdiag.nlme(fm16.1, limit =2, plotid = 6)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# QQ plot (Qui-quadrado) para a distância de Mahalanobis
-#residdiag.nlme(fm16.1, limit =2, plotid = 3)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Distância de Mahalanobis padronizada vs indices
-#residdiag.nlme(fm16.1, limit =2, plotid = 2)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Alavancagem conjunta generalizada [L1i(jj)] vs indices
-#residdiag.nlme(fm16.1, limit =2, plotid = 14)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Alavancagem conjunta generalizada [L2i(jj)] vs indices
-#residdiag.nlme(fm16.1, limit =2, plotid = 15)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Distância de Cook condicional 1 (D1i) vs ı́ndices
-#residdiag.nlme(fm16.1, limit =2, plotid = 8)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Distância de Cook condicional 2 (D2i) vs ı́ndices
-#residdiag.nlme(fm16.1, limit =2, plotid = 9)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Plota Distância de Cook condicional 3 (D3i) vs ı́ndices
-#residdiag.nlme(fm16.1, limit =2, plotid = 10)
-```
-
-```{r,warning=FALSE,message=FALSE}
-# Calcula os valores das estatísticas de comparação de modelos
-calc.estat.mod.comp.MRNLH(lm6.1) # modelo normal independente homocedástico
-calc.estat.mod.comp.MRNLH(fm16.1) # modelo misto
-```
-
-# MODELO MISTO BAYESIANO
-
-Segundo @manly a ideia básica por trás da Inferência Bayesiana é mudar as probabilidades para os parâmetros tomando valores númericos particulares para novas probabilidades como um resultado da coleta de mais dados, com essa mudança sendo alcançada através do Teorema de Bayes.
-Como um exemplo da abordagem Bayesiana, suponha que temos interesse no valor de um parâmetro $\theta$ de uma determinada população, e que antes de qualquer informação ser observada é de alguma forma possível afirmar que $\theta$ deve assumir um dos valores entre $\theta_1$, $\theta_1$, $\dots$, $\theta_n$ e que a probabilidade de o valor ser $\theta_i$ é $\pi(\theta_i)$.
-Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$ 
+$$ \textbf{y}_i = \textbf{X}_i \boldsymbol{\beta} + \textbf{Z}_i \textbf{b}_i + \boldsymbol{\xi}_i $$
+  
+  Com $\boldsymbol{\cal{D}} \equiv \tau$ e $\boldsymbol{\cal{R}_\text{i}} \equiv \sigma^\text{2}\boldsymbol{I}_\text{4}$, no qual \textbf{I}$_4$ é a matrix identidade 4 x 4.
 
 
-
-```{r}
+```{r include=FALSE}
 # MAKE DESIGN MATRIX
 X <- unname(model.matrix(~1+visual0+time+treat.f+treat.f:time,armd))
 attr(X,"assign") <- NULL
@@ -262,3 +429,65 @@ matrixFit <- stan(file = "matrixModel.stan",
                   data=stanDat,
                   iter = 2000, chains = 4)
 ```
+
+```{r}
+estimate_table <- round(summary(matrixFit,pars = c("beta","sigma_e","sigma_p"))$summary,2)
+```
+
+```{r}
+kable(estimate_table,
+      align = "c",
+      booktabs = TRUE,
+      label = "bayes") %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+A partir dos resultados presentes na Tabela \@ref(tab:bayes) obtidos através do ajuste do modelo temos que o valor esperado da qualidade da visão dos pacientes é de `r round(estimate_table["beta[1]","mean"],2)`. Enquanto que a cada unidade acrescida ao valor inicial da qualidade da visão aumentamos em `r round(estimate_table["beta[2]","mean"],2)` unidades na resposta. Já o incremento no valor esperado de $Y_{it}$ quando acrescido o tempo de uma semana para a próxima observada quando o paciente não está sob o tratamento *interferon*$-\alpha$ é de `r round(estimate_table["beta[3]","mean"],2)` unidades. Ao passo que quando o paciente está sob o tratamento *interferon*$-\alpha$ esse incremento apresenta o valor de `r round(sum(estimate_table[c("beta[4]","beta[5]"),"mean"]),2)`. Com isso, temos indícios que até o final do experimento as pessoas sob o tratamento placebo enxergam quase uma letra a menos do que no início apenas pelo efeito do tempo. Percebemos também que os valores estimados de $\beta_3$ e $\beta_4$ são negativos, como eles representam o efeito geral causado pelo tratamento e o efeito gerado pela interação entre tratamento e tempo respectivamente, isso mostra que o tratamento *interferon*$-\alpha$ tem desempenho inferior e de certo modo aparenta agravar a situação dos pacientes.
+
+```{r}
+D <- diag(round(sqrt(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2)),2),nrow = 4)
+S <- matrix(round(estimate_table["sigma_p","mean"]**2,2),ncol = 4,nrow = 4)
+diag(S) <- round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)
+Dinv <- solve(D)
+corr_mtrx <- round(Dinv%*%S%*%Dinv,2)
+```
+
+**Estimativa da Matriz de Variâncias e Covariâncias Condicionais, Variâncias e Covariâncias Marginais e Correlações, respectivamente:**
+  
+  \begin{equation*}
+\begin{pmatrix}
+`r round(estimate_table["sigma_e","mean"]**2,2)` & 0 & 0 & 0 \\
+0 & `r round(estimate_table["sigma_e","mean"]**2,2)` & 0 & 0 \\
+0 & 0 & `r round(estimate_table["sigma_e","mean"]**2,2)` & 0 \\
+0 & 0 & 0 & `r round(estimate_table["sigma_e","mean"]**2,2)` \\
+\end{pmatrix}
+% \quad
+\begin{pmatrix}
+`r round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` \\
+`r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` \\
+`r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` \\
+`r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(estimate_table["sigma_p","mean"]**2,2)` & `r round(sum(estimate_table[c("sigma_e","sigma_p"),"mean"]**2),2)` \\
+\end{pmatrix}
+% \quad
+\begin{pmatrix}
+`r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` \\
+`r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` \\
+`r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` & `r corr_mtrx[1,2]` \\
+`r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,2]` & `r corr_mtrx[1,1]` \\
+\end{pmatrix}
+\end{equation*}
+
+
+```{r warmup, fig.cap="Gráfico mostrando o resultado sobre convergência da CM, após descartado o warm-up.", fig.pos="H"}
+traceplot(matrixFit,pars=c("sigma_p"))
+```
+
+Como descrito na seção de metologia para diminuir a influência dos valores iniciais, geralmente são descartados a primeira metade de cada sequência. Dessa forma nossas inferências são baseadas na suposição de que a distribuição dos valores simulados para valores grandes de $i$ são próximos da distribuição alvo. Segue na Figura \ref{fig:warmup}, a segunda metade dos valores de 4 CM simuladas para estimação do valor de $\tau$ representadas em cores diferentes. O fato de estarem todas sobrepostas é um ótimo sinal de convergência das sequências.
+
+# CONSIDERAÇÕES FINAIS
+
+Levando em consideração os resultados obtidos a partir da análise descritiva e ajuste do modelo verificamos que os pacientes perderam parte da acuidade visual durante o tempo do experimento o que vai de acordo com a característica da doença. Contudo essa perda foi mais grave entre os pacientes que estavam sob o tratamento do *interferon*$-\alpha$. Dessa forma temos evidências a favor de que os resultados da droga *interferon*$-\alpha$ não são adequados para competir com o atual presente no mercado, pelo menos na dosagem administrada na qual temos os dados. Podemos ver que a metodologia de inferência proposta se adequou a estrutura do modelo, visto que obtivemos a convergência das sequência de forma consistente.
+
+\newpage
+
+# Referências
