@@ -1,5 +1,5 @@
 ---
-  title: "Modelos de Regressão Linear Mistos para dados discretos: Uma abordagem utilizando MCMC através do Stan integrado ao R."
+title: "Modelos de Regressão Linear Mistos para dados discretos: Uma comparação ao ajuste Linear Homocedástico e suas vantagens."
 author: 
   - Felipe Vieira - RA 160424
   - Guilherme Artoni - RA 160318
@@ -8,36 +8,36 @@ author:
 bibliography: referencia.bib
 output: 
   bookdown::pdf_document2:
-  toc: FALSE
+    toc: FALSE
 fig_crop: no
 fontsize: 10pt
 sansfont: Times
 documentclass: article
 geometry: 
   - a4paper
-- textwidth=18cm
-- textheight=21cm
+  - textwidth=18cm
+  - textheight=21cm
 header-includes:
   - \usepackage[utf8]{inputenc}
-- \usepackage[brazil, english, portuguese]{babel}
-- \usepackage[utf8]{inputenc}
-- \usepackage[T1]{fontenc}
-- \usepackage[fixlanguage]{babelbib}
-- \usepackage{times}
-
-- \usepackage{graphicx}
-- \usepackage{wrapfig}
-- \usepackage{pdfpages}
-
-- \usepackage{amsfonts}
-- \usepackage{amssymb}
-- \usepackage{amsmath}
-
-- \usepackage{fancyhdr}
-- \usepackage{subcaption}
-- \usepackage{booktabs}
-- \usepackage{caption}
-- \usepackage{float}
+  - \usepackage[brazil, english, portuguese]{babel}
+  - \usepackage[utf8]{inputenc}
+  - \usepackage[T1]{fontenc}
+  - \usepackage[fixlanguage]{babelbib}
+  - \usepackage{times}
+  
+  - \usepackage{graphicx}
+  - \usepackage{wrapfig}
+  - \usepackage{pdfpages}
+  
+  - \usepackage{amsfonts}
+  - \usepackage{amssymb}
+  - \usepackage{amsmath}
+  
+  - \usepackage{fancyhdr}
+  - \usepackage{subcaption}
+  - \usepackage{booktabs}
+  - \usepackage{caption}
+  - \usepackage{float}
 ---
   
   ```{r setup, include=FALSE}
@@ -82,11 +82,26 @@ bmatrix = function(x, digits=NULL, ...) {
 # INTRODUÇÃO
 
 A degeneração macular relacionada à idade (DMRI) é uma doença atualmente sem cura que ocorre em uma parte da retina chamada mácula e que leva a perda progressiva da visão central. A DMRI é uma alteração muito comum em pessoas com mais de 55 anos, sendo a causa mais frequente de baixa acuidade visual nessa faixa etária. A partir dos dados disponibilizados pelo Grupo de Estudo de Terapias Farmacológicas para Degeneração Macular (GETFDM) em 1997, iremos avaliar se um novo medicamento para DMRI tem poder competitivo com o principal existente no mercado. Trata-se de informações sobre ensaios clínicos aleatorizados realizados em diferentes centros de estudos. Durante os ensaios, a qualidade da visão de cada um dos 240 pacientes foi medida no início e após 4, 12, 24 e 52 semanas. A qualidade da visão foi medida através da quantidade de letras que os pacientes foram capazes de ler em gráficos de visão padronizados. Estes referem-se a panéis com várias letras agrupadas em linhas, de modo que o tamanho das letras diminui de cima para baixo à medida que o número de letras aumenta de cima para baixo. O objetivo era comparar um tratamento experimental chamado *interferon*$-\alpha$ e o placebo para pacientes diagnosticados com DMRI. Os dados mostrados são em relação ao placebo e a maior dose administrada do *interferon*$-\alpha$. Segue que temos dados longitudinais para cada paciente em forma de medidas da qualidade de sua visão.  
-Facilmente encontramos na literatura que uma das abordagens utilizadas para modelar este tipo de estudo com medidas repetidas são modelos conhecidos como modelos de efeitos aleatórios ou modelos mistos (MM), como podemos encontrar nos trabalhos de @gelman, @manly, @gamerman e @singer. A estrutura deste tipo de modelo considera não somente efeitos fixos e a componente dos erros, como também uma componente aleatória que incorpora a variabilidade do comportamento individual da i-ésima unidade experimental. Este tipo de estrutura tem diversas aplicações, tais como em modelos lineares hierárquicos e modelos de efeitos contextuais utilizados em estudos nas áreas da Educação e Sociologia respectivamente.  
-Afim de obter os resultados do ajuste do modelo utilizaremos uma abordagem da Inferência Bayesiana, através do método Monte Carlo Markov Chain (MCMC) implementado no software Stan integrado ao software R por meio do pacote *rstan*. Segundo @sorensen o Stan fornece um conjunto de ferramentas escaláveis para ajustar modelos na maioria das aplicações padrões de MM.  
-No que segue apresentaremos a metodologia utilizada para investigar os desempenhos de ambos tratamentos, ou seja a estrutura dos modelo mistos, o método MCMC, uma análise descritiva dos dados, o modelo proposto, assim como os resultados obtidos com o mesmo.
+Facilmente encontramos na literatura que uma das abordagens utilizadas para modelar este tipo de estudo com medidas repetidas são modelos conhecidos como modelos de efeitos aleatórios ou modelos mistos (MM), como podemos encontrar nos trabalhos de @gelman, @manly, @gamerman e @singer. A estrutura deste tipo de modelo considera não somente efeitos fixos e a componente dos erros, como também uma componente aleatória que incorpora a variabilidade do comportamento individual da i-ésima unidade experimental. respectivamente.  
 
-\newpage
+# OBJETIVO
+
+Com o objetivo de modelar o problema, é necessário que algumas
+premissas sejam satisfeitas. No caso mais simples são elas a normalidade,
+independência e homocedasticidade dos resíduos, sendo que na maioria das vezes
+algumas dessas condições não são satisfeitas. Este estudo é um exemplo clássico,
+em que amostras são colhidas sobre o mesmo grupo de indivíduos ao longo do
+tempo a fim de avaliar os efeitos de um tratamento, violando o princípio da
+independência, visto que existe um efeito acumulativo do tratamento sobre os
+organismos das pessoas e por outro lado a especificidade de como cada organismo
+reage ao tratamento. Uma maneira de trabalhar com esse problema é a utilização
+modelos mistos (MM), no qual se incorpora um efeito aleatório ao modelo normal
+linear homocedástico (MNLH) com a finalidade de decompor a variabilidade dos
+dados que inicialmente seria atribuída somente aos resíduos para atribuí-la também
+à efeitos particulares de cada indivíduo.  
+Nessa perspectiva serão comparados os resultados dos ajustes dos MNLH e
+MM em relação aos desempenhos de ambos os tratamentos da DMRI, bem como
+as medidas de adequabilidade às suposições de ambos os modelos. 
 
 # METODOLOGIA
 
@@ -110,106 +125,106 @@ $$ \boldsymbol{b}_j  \sim \boldsymbol{\cal{N}}_{k}( \boldsymbol{0},\boldsymbol{\
                                                      em que $\boldsymbol{\cal{D}}$ e $\boldsymbol{\Sigma_j}$ são matrizes simétricas definidas positivas e, além disso, que $\boldsymbol{b}_j$ e $\boldsymbol{\xi}_j$ são variáveis aleatórias independentes.
                                                    
                                                    Sob esse modelo, o vetor de respostas associado à i-ésima unidade amostral tem distribuição normal multivariada com vetor de médias e matriz de covariâncias dados, respectivamente por
-                                                   $$E(\boldsymbol{Y}_{j}) = \boldsymbol{X}_{j}\boldsymbol{\beta}$$
-                                                     e
-                                                   $$V(\boldsymbol{Y}_{j}) = \boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'} + \boldsymbol{\Sigma_j}$$
+$$E(\boldsymbol{Y}_{j}) = \boldsymbol{X}_{j}\boldsymbol{\beta}$$
+ e
+$$V(\boldsymbol{Y}_{j}) = \boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'} + \boldsymbol{\Sigma_j}$$
 Em que primeira componente $\boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'}$ modela a dispersão dos perfis individuais de resposta e a segunda componente $\boldsymbol{\Sigma_j}$ está relacionada com a dispersão da resposta em torno dos perfis individuais.
                                                    
-                                                   ### MODELO PARA A ESTRUTURA DE COVARIÂNCIA
-                                                   
-                                                   Grande parte do esforço empregado na modelagem de dados com medidas repetidas se concentram na estrutura de covariância. Em geral, o modelo para a matriz de covariâncias $\boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'} + \boldsymbol{\Sigma_j}$ deve depender da maneira pela qual as observações foram obtidas e do conhecimento sobre o mecanismo gerador das observações. Quando $\boldsymbol{\Sigma_j} = \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_{n_j}$ o modelo é chamado de modelo de independência condicional homocedástico, indicando que as $n_j$ observações da j-ésima unidade amostral são condicionalmente independentes dado $b_j$.
+### MODELO PARA A ESTRUTURA DE COVARIÂNCIA
+
+Grande parte do esforço empregado na modelagem de dados com medidas repetidas se concentram na estrutura de covariância. Em geral, o modelo para a matriz de covariâncias $\boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'} + \boldsymbol{\Sigma_j}$ deve depender da maneira pela qual as observações foram obtidas e do conhecimento sobre o mecanismo gerador das observações. Quando $\boldsymbol{\Sigma_j} = \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_{n_j}$ o modelo é chamado de modelo de independência condicional homocedástico, indicando que as $n_j$ observações da j-ésima unidade amostral são condicionalmente independentes dado $b_j$.
 
 Das possíveis estruturas de covariância disponíveis na literatura estatística, adotaremos a Estrutura Uniforme, tomando $n_j = 4$ temos 
 
 $$\boldsymbol{\cal{V}}_\text{j} \equiv \boldsymbol{Z}_\text{j} \boldsymbol{\cal{D}} \boldsymbol{Z}_\text{j}^{\boldsymbol{'}} + \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_{n_j}$$
-  
-  \begin{equation*}
+
+\begin{equation*}
 = \begin{pmatrix}
-  1 \\
-  1 \\
-  1 \\
-  1 \\
-  \end{pmatrix} \tau \begin{pmatrix}
-  1 & 1 & 1 & 1
-  \end{pmatrix} + \begin{pmatrix}
-  \sigma^\textbf{2} & 0 & 0 & 0 \\
-  0 & \sigma^\textbf{2} & 0 & 0 \\
-  0 & 0 & \sigma^\textbf{2} & 0 \\
-  0 & 0 & 0 & \sigma^\textbf{2} \\
-  \end{pmatrix}
-  % \quad
-  = \begin{pmatrix}
-  \sigma^{\textbf{2}} + \tau & \tau & \tau & \tau \\
-  \tau & \sigma^{\textbf{2}} + \tau & \tau & \tau \\
-  \tau & \tau & \sigma^{\textbf{2}} + \tau & \tau \\
-  \tau & \tau & \tau & \sigma^{\textbf{2}} + \tau \\
-  \end{pmatrix}
-  \end{equation*}
+1 \\
+1 \\
+1 \\
+1 \\
+\end{pmatrix} \tau \begin{pmatrix}
+1 & 1 & 1 & 1
+\end{pmatrix} + \begin{pmatrix}
+\sigma^\textbf{2} & 0 & 0 & 0 \\
+0 & \sigma^\textbf{2} & 0 & 0 \\
+0 & 0 & \sigma^\textbf{2} & 0 \\
+0 & 0 & 0 & \sigma^\textbf{2} \\
+\end{pmatrix}
+% \quad
+= \begin{pmatrix}
+\sigma^{\textbf{2}} + \tau & \tau & \tau & \tau \\
+\tau & \sigma^{\textbf{2}} + \tau & \tau & \tau \\
+\tau & \tau & \sigma^{\textbf{2}} + \tau & \tau \\
+\tau & \tau & \tau & \sigma^{\textbf{2}} + \tau \\
+\end{pmatrix}
+\end{equation*}
   
-  Pela estrutura da matriz de variâncias e covariâncias temos um coeficiente de correlação comum para todos os pares de variáveis $\varrho = \tau / (\sigma^2 + \tau)$. Pelo fato do $\tau$ ser não negativo, implica que $\varrho$ é também não negativo.
+Pela estrutura da matriz de variâncias e covariâncias temos um coeficiente de correlação comum para todos os pares de variáveis $\varrho = \tau / (\sigma^2 + \tau)$. Pelo fato do $\tau$ ser não negativo, implica que $\varrho$ é também não negativo.
+
+
+## INFERÊNCIA BAYESIANA
+
+Segundo @manly a ideia básica por trás da Inferência Bayesiana é mudar as probabilidades para os parâmetros tomando valores númericos específicos para novas probabilidades como um resultado da coleta de mais dados, com essa mudança sendo alcançada através do Teorema de Bayes.
+Como um exemplo da abordagem Bayesiana, suponha que temos interesse no valor de um parâmetro $\theta$ de uma determinada população, e que antes de qualquer informação ser observada é de alguma forma possível afirmar que $\theta$ deve assumir um dos valores entre $\theta_1$, $\theta_1$, $\dots$, $\theta_n$ e que a probabilidade de o valor ser $\theta_i$ é $\pi(\theta_i)$.
+Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$. Então o Teorema de Bayes afirma que a probabilidade de $\theta$ ser igual a $\theta_i$, dado novas observações, é 
+$$\pi(\theta_i|dados) = \frac{\pi(dados|\theta_i)p(\theta_i)}{\sum_{j=1}^n \pi(data|\theta_j)\pi(\theta_j)},$$
+  onde $\pi(\theta_i|dados)$ é a distribuição a posteriori de $\theta$. Contudo frequentemente lidamos com situações em que vários parâmetros estão envolvidos, de tal forma que no geral
+$$\pi(\theta_1, \theta_2, \dots,\theta_p | dados) \propto \pi(dados | \theta_1, \theta_2, \dots,\theta_p)\pi(\theta_1, \theta_2, \dots,\theta_p),$$
+  ou seja, a distribuição a posteriori de vários parâmetros dado um conjunto de dados é proporcional a probabilidade dos dados quando conhecidos os parâmetros  multiplicada pela probabilidade a priori dos parâmetros.
+
+## MONTE CARLO MARKOV CHAIN
+
+### INTRODUÇÃO ÀS CADEIAS DE MARKOV
+
+Considere uma sequência de variáveis aleatórias discretas $\{X_0,X_1,X_2,\dots\}$ e espaço de estados denotado por S=$\{s_1,s_2,\dots,s_k\}$. A sequência de variáveis aleatórias $\{X_0,X_1,X_2,\dots\}$ é uma Cadeia de Markov (CM), se 
+$$p(X_t | X_{t-1},X_{t-2},\dots,X_{0})=p(X_t | X_{t-1}),$$
+  para t$=1,2,\dots,$ ou seja, dada $X_{t-1}$, a distribuição de $X_{t}$ independe de suas predecessoras, $X_{t-2},X_{t-3}, \dots$.
+Em um instante t qualquer, a probabilidade que o processo mude de um estado $X_{t} = s_i$ para um estado $X_{t+1} = s_j$ é dada pela matriz de transição, $P=\{p_{ij}\}$. A restrição natural sobre a matriz de transição é que a soma das linhas seja 1, $\sum_j p_{ij} = 1$, para todo $i$.  
+Uma CM admite uma distribuição de equilíbrio $\boldsymbol{\pi}$ se existir $\boldsymbol{\pi}$ tal que $\boldsymbol{\pi} = \boldsymbol{\pi} P$.
+
+**IRREDUTIBILIDADE**
   
+  Uma CM, cujas as variáveis aleatórias são discretas, é dita irredutível se for uma cadeia em que partindo-se de um estado qualquer, pode-se atingir qualquer estado, inclusive o inicial, em um número finito de transições.
+
+**REVERSIBILIDADE**
   
-  ## INFERÊNCIA BAYESIANA
-  
-  Segundo @manly a ideia básica por trás da Inferência Bayesiana é mudar as probabilidades para os parâmetros tomando valores númericos específicos para novas probabilidades como um resultado da coleta de mais dados, com essa mudança sendo alcançada através do Teorema de Bayes.
-  Como um exemplo da abordagem Bayesiana, suponha que temos interesse no valor de um parâmetro $\theta$ de uma determinada população, e que antes de qualquer informação ser observada é de alguma forma possível afirmar que $\theta$ deve assumir um dos valores entre $\theta_1$, $\theta_1$, $\dots$, $\theta_n$ e que a probabilidade de o valor ser $\theta_i$ é $\pi(\theta_i)$.
-  Suponha também que alguns dados novos são coletados e a probabilidade de observar estes dados é $\pi(dados|\theta_i)$ se de fato $\theta = \theta_i$. Então o Teorema de Bayes afirma que a probabilidade de $\theta$ ser igual a $\theta_i$, dado novas observações, é 
-  $$\pi(\theta_i|dados) = \frac{\pi(dados|\theta_i)p(\theta_i)}{\sum_{j=1}^n \pi(data|\theta_j)\pi(\theta_j)},$$
-    onde $\pi(\theta_i|dados)$ é a distribuição a posteriori de $\theta$. Contudo frequentemente lidamos com situações em que vários parâmetros estão envolvidos, de tal forma que no geral
-  $$\pi(\theta_1, \theta_2, \dots,\theta_p | dados) \propto \pi(dados | \theta_1, \theta_2, \dots,\theta_p)\pi(\theta_1, \theta_2, \dots,\theta_p),$$
-    ou seja, a distribuição a posteriori de vários parâmetros dado um conjunto de dados é proporcional a probabilidade dos dados quando conhecidos os parâmetros  multiplicada pela probabilidade a priori dos parâmetros.
-  
-  ## MONTE CARLO MARKOV CHAIN
-  
-  ### INTRODUÇÃO ÀS CADEIAS DE MARKOV
-  
-  Considere uma sequência de variáveis aleatórias discretas $\{X_0,X_1,X_2,\dots\}$ e espaço de estados denotado por S=$\{s_1,s_2,\dots,s_k\}$. A sequência de variáveis aleatórias $\{X_0,X_1,X_2,\dots\}$ é uma Cadeia de Markov (CM), se 
-  $$p(X_t | X_{t-1},X_{t-2},\dots,X_{0})=p(X_t | X_{t-1}),$$
-    para t$=1,2,\dots,$ ou seja, dada $X_{t-1}$, a distribuição de $X_{t}$ independe de suas predecessoras, $X_{t-2},X_{t-3}, \dots$.
-  Em um instante t qualquer, a probabilidade que o processo mude de um estado $X_{t} = s_i$ para um estado $X_{t+1} = s_j$ é dada pela matriz de transição, $P=\{p_{ij}\}$. A restrição natural sobre a matriz de transição é que a soma das linhas seja 1, $\sum_j p_{ij} = 1$, para todo $i$.  
-  Uma CM admite uma distribuição de equilíbrio $\boldsymbol{\pi}$ se existir $\boldsymbol{\pi}$ tal que $\boldsymbol{\pi} = \boldsymbol{\pi} P$.
-  
-  **IRREDUTIBILIDADE**
-    
-    Uma CM, cujas as variáveis aleatórias são discretas, é dita irredutível se for uma cadeia em que partindo-se de um estado qualquer, pode-se atingir qualquer estado, inclusive o inicial, em um número finito de transições.
-  
-  **REVERSIBILIDADE**
-    
-    Uma CM é dita reversível se a probabilidade de estar em um estado $s_i$ e mover-se para $s_j$ é igual à probabilidade de estar no estado $s_j$ e mover-se para o estado $s_i$, ou seja,
-  $$\boldsymbol{\pi}(i)p(i,j) = \boldsymbol{\pi}(j)p(j,i)$$
-    A denominação reversível se deve ao fato que, atendida a condição acima, a mesma lei de transição se aplica à cadeia tanto no sentido natural de evolução do tempo, $t, t+1, t+2, \dots,$ quanto no sentido contrário $t, t-1, t-2, \dots$. A reversibilidade de uma CM está associada ao fato da mesma admitir uma distribuição de equilíbrio.
-  
-  ### AMOSTRADOR DE GIBBS
-  
-  O Amostrador de Gibbs (AG) é um método para aproximar uma distribuição multivariada tomando somente amostras de distribuições univariadas. O benefício deste método com Inferência Bayesiana é que torna relativamente fácil amostrar de uma distribuição a posteriori multivariada até mesmo quando o número de parâmetros envolvidos é muito grande.
-  
-  Suponha que a distribuição a posteriori tenha função de densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para os $p$ parâmetros $\theta_1, \theta_2, \dots,\theta_p$ e seja $\pi(\theta_i | \theta_1, \dots, \theta_{i-1}, \theta_{i+1}, \dots,\theta_p)$ a função densidade condicional para $\theta_i$ dado os valores dos outros parâmetros. O problema então é gerar um grande número de amostras aleatórias da distribuição a posteriori com o objetivo de aproximar a própria distribuição e  distribuições de várias funções dos parâmetros. Isto é feito tomando arbitrariamente valores iniciais $\{\theta_1(0), \theta_2(0), \dots,\theta_p(0)\}$ para os $p$ parâmetros e em seguida mudá-los um a um selecionando novos valores como segue:
-    $$\theta_1(1) \quad \text{é escolhido de} \quad \pi(\theta_1 | \theta_2(0), \theta_3(0), \dots,\theta_p(0))$$
-    $$\theta_2(1) \quad \text{é escolhido de} \quad \pi(\theta_2 | \theta_1(1), \theta_3(0), \dots,\theta_p(0))$$
-    $$\theta_3(1) \quad \text{é escolhido de} \quad \pi(\theta_3 | \theta_1(1), \theta_2(1), \theta_4(0) \dots,\theta_p(0))$$
-    $$\vdots$$
-    $$\theta_p(1) \quad \text{é escolhido de} \quad \pi(\theta_p | \theta_1(1), \theta_2(1), \dots,\theta_{p-1}(1))$$
-    Nesse ponto todos os valores iniciais foram substituídos, o que representa um ciclo completo do algoritmo. O processo então é repetido muitas vezes produzindo a sequência $\{\theta_1(1), \theta_2(1), \dots,\theta_p(1)\}, \{\theta_1(2), \theta_2(2), \dots,\theta_p(2)\}, \dots, \{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ a qual caracteriza uma CM, pois em cada etapa do algoritmo a mudança é feita dependendo apenas do valor atual de $\theta$.
-  
-  ### METROPOLIS-HASTINGS
-  
-  Considere uma distribuição $\pi$ da qual se deseja gerar uma amostra através de uma CM. De acordo com @gamerman deve-se construir um núcleo de transição $p(\theta,\phi)$ de forma que $\pi$ seja a distribuição de equilíbrio da cadeia. Uma forma simple de fazer isso é através de cadeias onde o núcleo $p$ satisfaça 
-  $$\pi(\theta)p(\theta,\phi) = \pi(\phi)p(\phi,\theta), \quad \forall \quad (\theta,\phi))$$
-  essa equação é também conhecida como equação de equílibrio detalhado. Embora não seja necessária, ela é suficiente para que $\pi$ seja a distribuição de equilíbrio da cadeia. Como vimos na seção 2.3.1 essa é a condição de reversibilidade da cadeia.  
+  Uma CM é dita reversível se a probabilidade de estar em um estado $s_i$ e mover-se para $s_j$ é igual à probabilidade de estar no estado $s_j$ e mover-se para o estado $s_i$, ou seja,
+$$\boldsymbol{\pi}(i)p(i,j) = \boldsymbol{\pi}(j)p(j,i)$$
+  A denominação reversível se deve ao fato que, atendida a condição acima, a mesma lei de transição se aplica à cadeia tanto no sentido natural de evolução do tempo, $t, t+1, t+2, \dots,$ quanto no sentido contrário $t, t-1, t-2, \dots$. A reversibilidade de uma CM está associada ao fato da mesma admitir uma distribuição de equilíbrio.
+
+### AMOSTRADOR DE GIBBS
+
+O Amostrador de Gibbs (AG) é um método para aproximar uma distribuição multivariada tomando somente amostras de distribuições univariadas. O benefício deste método com Inferência Bayesiana é que torna relativamente fácil amostrar de uma distribuição a posteriori multivariada até mesmo quando o número de parâmetros envolvidos é muito grande.
+
+Suponha que a distribuição a posteriori tenha função de densidade $\pi(\theta_1, \theta_2, \dots,\theta_p)$ para os $p$ parâmetros $\theta_1, \theta_2, \dots,\theta_p$ e seja $\pi(\theta_i | \theta_1, \dots, \theta_{i-1}, \theta_{i+1}, \dots,\theta_p)$ a função densidade condicional para $\theta_i$ dado os valores dos outros parâmetros. O problema então é gerar um grande número de amostras aleatórias da distribuição a posteriori com o objetivo de aproximar a própria distribuição e  distribuições de várias funções dos parâmetros. Isto é feito tomando arbitrariamente valores iniciais $\{\theta_1(0), \theta_2(0), \dots,\theta_p(0)\}$ para os $p$ parâmetros e em seguida mudá-los um a um selecionando novos valores como segue:
+  $$\theta_1(1) \quad \text{é escolhido de} \quad \pi(\theta_1 | \theta_2(0), \theta_3(0), \dots,\theta_p(0))$$
+  $$\theta_2(1) \quad \text{é escolhido de} \quad \pi(\theta_2 | \theta_1(1), \theta_3(0), \dots,\theta_p(0))$$
+  $$\theta_3(1) \quad \text{é escolhido de} \quad \pi(\theta_3 | \theta_1(1), \theta_2(1), \theta_4(0) \dots,\theta_p(0))$$
+  $$\vdots$$
+  $$\theta_p(1) \quad \text{é escolhido de} \quad \pi(\theta_p | \theta_1(1), \theta_2(1), \dots,\theta_{p-1}(1))$$
+  Nesse ponto todos os valores iniciais foram substituídos, o que representa um ciclo completo do algoritmo. O processo então é repetido muitas vezes produzindo a sequência $\{\theta_1(1), \theta_2(1), \dots,\theta_p(1)\}, \{\theta_1(2), \theta_2(2), \dots,\theta_p(2)\}, \dots, \{\theta_1(N), \theta_2(N), \dots,\theta_p(N)\}$ a qual caracteriza uma CM, pois em cada etapa do algoritmo a mudança é feita dependendo apenas do valor atual de $\theta$.
+
+### METROPOLIS-HASTINGS
+
+Considere uma distribuição $\pi$ da qual se deseja gerar uma amostra através de uma CM. De acordo com @gamerman deve-se construir um núcleo de transição $p(\theta,\phi)$ de forma que $\pi$ seja a distribuição de equilíbrio da cadeia. Uma forma simple de fazer isso é através de cadeias onde o núcleo $p$ satisfaça 
+$$\pi(\theta)p(\theta,\phi) = \pi(\phi)p(\phi,\theta), \quad \forall \quad (\theta,\phi))$$
+essa equação é também conhecida como equação de equílibrio detalhado. Embora não seja necessária, ela é suficiente para que $\pi$ seja a distribuição de equilíbrio da cadeia. Como vimos na seção 2.3.1 essa é a condição de reversibilidade da cadeia.  
 O núcleo $p(\theta,\phi)$ é constituído de 2 elementos: um núcleo de transição arbitrário $q(\theta,\phi)$ e uma probabilidade $\alpha(\theta,\phi)$ de forma que,
 $$p(\theta,\phi) = q(\theta,\phi)\alpha(\theta,\phi), \quad \text{se} \quad \theta \ne \phi$$
-  Portanto, o núcleo de transição define uma densidade $p(\theta, .)$ para todos os valores diferentes de $\theta$. Consequentemente, resta uma probabilidade positiva da cadeia ficar em $\theta$ dada por
+Portanto, o núcleo de transição define uma densidade $p(\theta, .)$ para todos os valores diferentes de $\theta$. Consequentemente, resta uma probabilidade positiva da cadeia ficar em $\theta$ dada por
 $$p(\theta,\theta) = 1 - \int q(\theta,\phi)\alpha(\theta,\phi)\text{d}\phi$$
-  Logo, o núcleo de transição define uma distribuição mista para o novo estado $\phi$ da cadeia. Para $\phi \ne \theta$ essa distribuição tem densidade e para $\phi = \theta$, essa distribuição atribui uma probabilidade positiva.  
+Logo, o núcleo de transição define uma distribuição mista para o novo estado $\phi$ da cadeia. Para $\phi \ne \theta$ essa distribuição tem densidade e para $\phi = \theta$, essa distribuição atribui uma probabilidade positiva.  
 A expressão mais comum para a probabilidade de aceitação é 
 $$\alpha(\theta,\phi) = min\{1,\frac{\pi(\phi)\text{q}(\phi,\theta)}{\pi(\theta)\text{q}(\theta,\phi)}\}$$
-  onde a razão que aparece na expressão é chamada de razão de teste.
+onde a razão que aparece na expressão é chamada de razão de teste.
 
 Em termos práticos isso significa que a simulação de uma amostra de $\pi$ usando a cadeia de Markov pode ser esquematizada da seguinte forma:
-  
-  i) inicialize o contador de iterações da cadeia $j = 1$ e tome um valor arbitrário para $\theta{(0)}$;
-  
-  ii) mova a cadeia para um novo valor $\phi$ gerado da densidade $q(\theta{(j-1)},.)$ ;
+
+i) inicialize o contador de iterações da cadeia $j = 1$ e tome um valor arbitrário para $\theta{(0)}$;
+
+ii) mova a cadeia para um novo valor $\phi$ gerado da densidade $q(\theta{(j-1)},.)$ ;
 
 iii) calcule a probabilidade de aceitação do movimento $\alpha(\theta{(j-1)},\phi)$ . Se o movimento for aceito, $\theta{(j)} = \phi$, caso contrário $\theta{(j)} = \theta{(j-1)}$ e a cadeia não se move;
 
@@ -335,6 +350,41 @@ A partir da matriz de variância e covariância $\bold{\Sigma}$ observa-se que h
 \end{equation*}
 
 ## MODELAGEM
+
+### MODELO NORMAL INDEPENDENTE HOMOCEDÁSTICO  
+  
+Será aplicado um modelo linear para a visão explicado por visão inicial, tempo de tratamento, tipo de tratamento(interferon ou placebo) e interação do tempo com tratamento.  A seguir encontram-se os parâmetros para o modelo estimado. 
+
+```{r,warning=FALSE,message=FALSE}
+# Ajuste do modelo Normal Independente Homocedástico
+lm.form <- formula(visual ~ -1 + visual0 + time.f + treat.f:time.f)
+lm6.1 <- lm(lm.form, armd)
+```
+  
+O desvio-padrão do resíduo no modelo normal, sem considerar estruturas de modelo misto, bem como intervalos de confiança para os parâmetros:  
+
+```{r,warning=FALSE,message=FALSE}
+# Estimativas, Erros Padrão, t-value, p-value, coef. de determinação R² e R² ajustado e interv. conf.
+summ <- summary(lm6.1)
+summ$sigma
+confint(lm6.1)
+```
+  
+A seguir foi realizada uma análise de variância dos parâmetros do modelo, à fim de comprovar sua significância.
+```{r,warning=FALSE,message=FALSE}
+# ANOVA
+anova(lm6.1)
+```
+  
+A seguir temos análises gráficas dos resíduos com o intuito de checar quaisquer violações às suposições do modelo. Verifica-se um comportamento atípico na dispersão nos resíduos, que pode ser atribuído aos dados faltantes, assim como uma falta de ajuste nas caudas do gráfico de envelope.
+```{r,warning=FALSE,message=FALSE}
+# Análise de Resíduos
+normal_diag(lm6.1) #checa indepedência e homocedásticidade
+```
+  
+A seguir, será proposto um modelo misto, e será obtida uma comparação entre o modelo linear homocedástico e o modelo misto.  
+
+### MODELO MISTO
 
 Vamos considerar agora o seguinte modelo:
   
