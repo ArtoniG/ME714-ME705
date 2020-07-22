@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.4.28)  21 JUL 2020 21:10
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.4.28)  21 JUL 2020 21:27
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1201,161 +1201,109 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 111.
-(./regression_program.toc
-LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 2.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 110.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 5.
+(Font)              <10> on input line 112.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 5.
+(Font)              <7> on input line 112.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 5.
-)
-\tf@toc=\write4
-\openout4 = `regression_program.toc'.
-
+(Font)              <5> on input line 112.
+LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <12> not available
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 139.
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 143.
-LaTeX Font Info:    Try loading font information for TS1+ptm on input line 151.
+LaTeX Font Info:    Try loading font information for TS1+ptm on input line 147.
 
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
-LaTeX Font Info:    Try loading font information for T1+pcr on input line 163.
+LaTeX Font Info:    Try loading font information for T1+pcr on input line 159.
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1pcr.fd
 File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
 )
-Overfull \hbox (867.8504pt too wide) in paragraph at lines 168--168
+Overfull \hbox (867.8504pt too wide) in paragraph at lines 161--161
 []                                               \T1/pcr/m/n/10 Sob esse modelo
 , o vetor de respostas associado à i-ésima unidade amostral tem distribuição no
 rmal multivariada com vetor de médias e matriz de covariâncias dados, respectiv
 amente por[] 
  []
 
-
-Overfull \hbox (153.8504pt too wide) in paragraph at lines 168--168
-[]                                               \T1/pcr/m/n/10 $$E(\boldsymbol
-{Y}_{j}) = \boldsymbol{X}_{j}\boldsymbol{\beta}$$[] 
- []
-
-LaTeX Font Info:    Try loading font information for TS1+pcr on input line 168.
-
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1pcr.fd
-File: ts1pcr.fd 2001/06/04 font definitions for TS1/pcr.
-)
-Overfull \hbox (441.8504pt too wide) in paragraph at lines 168--168
-[]                                               \T1/pcr/m/n/10 $$V(\boldsymbol
-{Y}_{j}) = \boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{\TS1/pcr/m
-/n/10 '\T1/pcr/m/n/10 } + \boldsymbol{\Sigma_j}$$[] 
- []
-
-
-Overfull \hbox (21.8504pt too wide) in paragraph at lines 176--176
-[]                                               \T1/pcr/m/n/10 ### MODELO PARA
- A ESTRUTURA DE COVARIÂNCIA[] 
- []
-
-[2]
-Overfull \hbox (3651.8504pt too wide) in paragraph at lines 176--176
-[]                                               \T1/pcr/m/n/10 Grande parte do
- esforço empregado na modelagem de dados com medidas repetidas se concentram na
- estrutura de covariância. Em geral, o modelo para a matriz de covariâncias $\b
-oldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{\TS1/pcr/m/n/10 '\T1/pc
-r/m/n/10 } + \boldsymbol{\Sigma_j}$ deve depender da maneira pela qual as obser
-vações foram obtidas e do conhecimento sobre o mecanismo gerador das observaçõe
-s. Quando $\boldsymbol{\Sigma_j} = \boldsymbol{\sigma}^\text{2} \boldsymbol{I}_
-{n_j}$ o modelo é chamado de modelo de independência condicional homocedástico,
- indicando que as $n_j$ observações da j-ésima unidade amostral são condicional
-mente independentes dado $b_j$.[] 
- []
-
-
-Overfull \hbox (807.8504pt too wide) in paragraph at lines 231--231
-[]\T1/pcr/m/n/10 Uma CM, cujas as variáveis aleatórias são discretas, é dita ir
-redutível se for uma cadeia em que partindo-se de um estado qualquer, pode-se a
-tingir qualquer estado, inclusive o inicial, em um número finito de transições.
-[] 
- []
-
-
-Overfull \hbox (585.8504pt too wide) in paragraph at lines 237--237
-[]\T1/pcr/m/n/10 Uma CM é dita reversível se a probabilidade de estar em um est
-ado $s_i$ e mover-se para $s_j$ é igual à probabilidade de estar no estado $s_j
-$ e mover-se para o estado $s_i$, ou seja,[] 
- []
-
-[3] [4]
-<regression_program_files/figure-latex/perfis-1.pdf, id=89, 338.26375pt x 257.9
-6375pt>
+LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10> not available
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 169.
+[2] [3] [4]
+<regression_program_files/figure-latex/perfis-1.pdf, id=125, 338.26375pt x 257.
+96375pt>
 File: regression_program_files/figure-latex/perfis-1.pdf Graphic file (type pdf
 )
 <use regression_program_files/figure-latex/perfis-1.pdf>
 Package pdftex.def Info: regression_program_files/figure-latex/perfis-1.pdf  us
-ed on input line 308.
+ed on input line 303.
 (pdftex.def)             Requested size: 338.27322pt x 257.97096pt.
 [5]
-<regression_program_files/figure-latex/boxplot-1.pdf, id=106, 334.24875pt x 237
+<regression_program_files/figure-latex/boxplot-1.pdf, id=140, 334.24875pt x 237
 .88875pt>
 File: regression_program_files/figure-latex/boxplot-1.pdf Graphic file (type pd
 f)
 <use regression_program_files/figure-latex/boxplot-1.pdf>
 Package pdftex.def Info: regression_program_files/figure-latex/boxplot-1.pdf  u
-sed on input line 343.
+sed on input line 338.
 (pdftex.def)             Requested size: 334.26321pt x 237.89903pt.
 
 Package amsfonts Warning: Obsolete command \bold; \mathbf should be used instea
-d on input line 350.
+d on input line 345.
 
 [6 <./regression_program_files/figure-latex/perfis-1.pdf>] [7 <./regression_pro
 gram_files/figure-latex/boxplot-1.pdf>]
-<regression_program_files/figure-latex/unnamed-chunk-8-1.pdf, id=137, 356.33125
+LaTeX Font Info:    Try loading font information for TS1+pcr on input line 412.
+
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1pcr.fd
+File: ts1pcr.fd 2001/06/04 font definitions for TS1/pcr.
+)
+<regression_program_files/figure-latex/unnamed-chunk-8-1.pdf, id=171, 356.33125
 pt x 280.04625pt>
 File: regression_program_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file 
 (type pdf)
 <use regression_program_files/figure-latex/unnamed-chunk-8-1.pdf>
 Package pdftex.def Info: regression_program_files/figure-latex/unnamed-chunk-8-
-1.pdf  used on input line 421.
+1.pdf  used on input line 416.
 (pdftex.def)             Requested size: 356.34666pt x 280.05836pt.
 [8 <./regression_program_files/figure-latex/unnamed-chunk-8-1.pdf>]
 
-LaTeX Font Warning: Command \small invalid in math mode on input line 450.
+LaTeX Font Warning: Command \small invalid in math mode on input line 445.
 
 [9]
 
-LaTeX Warning: Reference `tab:bayes' on page 10 undefined on input line 512.
+LaTeX Warning: Reference `tab:bayes' on page 10 undefined on input line 507.
 
-<regression_program_files/figure-latex/warmup-1.pdf, id=159, 345.29pt x 261.978
+<regression_program_files/figure-latex/warmup-1.pdf, id=191, 345.29pt x 261.978
 74pt>
 File: regression_program_files/figure-latex/warmup-1.pdf Graphic file (type pdf
 )
 <use regression_program_files/figure-latex/warmup-1.pdf>
 Package pdftex.def Info: regression_program_files/figure-latex/warmup-1.pdf  us
-ed on input line 541.
+ed on input line 536.
 (pdftex.def)             Requested size: 345.2944pt x 261.98209pt.
 [10] [11 <./regression_program_files/figure-latex/warmup-1.pdf>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 571.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 569.
 [12]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 571.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 569.
 (./regression_program.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 571.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 571.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 569.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 569.
 Package rerunfilecheck Info: File `regression_program.out' has not changed.
-(rerunfilecheck)             Checksum: E284A0F412FC81C73D9E713F86823536;1003.
+(rerunfilecheck)             Checksum: 180029BD2AB6B356814B93B36AFE7FA3;3234.
 
 LaTeX Warning: There were undefined references.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 571.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 569.
  ) 
 Here is how much of TeX's memory you used:
- 17284 strings out of 494862
- 252560 string characters out of 6178946
- 385045 words of memory out of 5000000
- 20091 multiletter control sequences out of 15000+600000
- 78620 words of font info for 166 fonts, out of 8000000 for 9000
+ 17318 strings out of 494862
+ 253233 string characters out of 6178946
+ 385418 words of memory out of 5000000
+ 20107 multiletter control sequences out of 15000+600000
+ 79010 words of font info for 172 fonts, out of 8000000 for 9000
  38 hyphenation exceptions out of 8191
  42i,11n,43p,1554b,477s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/share/texmf/fonts/en
@@ -1374,10 +1322,10 @@ nts/type1/public/lm/lmr7.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy10.pfb
 rr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/
 share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/t
 exmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on regression_program.pdf (12 pages, 404136 bytes).
+Output written on regression_program.pdf (12 pages, 401533 bytes).
 PDF statistics:
- 266 PDF objects out of 1000 (max. 8388607)
- 219 compressed objects within 3 object streams
- 53 named destinations out of 1000 (max. 500000)
- 14429 words of extra memory for PDF output out of 17280 (max. 10000000)
+ 301 PDF objects out of 1000 (max. 8388607)
+ 254 compressed objects within 3 object streams
+ 65 named destinations out of 1000 (max. 500000)
+ 14509 words of extra memory for PDF output out of 17280 (max. 10000000)
 

@@ -122,9 +122,9 @@ Conforme discutido em @singer, em geral podemos analisar dados provenientes de e
 
 Em muitos casos é razoável supor que 
 $$ \boldsymbol{b}_j  \sim \boldsymbol{\cal{N}}_{k}( \boldsymbol{0},\boldsymbol{\cal{D)}} \;\; e \;\; \boldsymbol{\xi}_j \sim \boldsymbol{\cal{N}}_{n_i}( \boldsymbol{0}, \boldsymbol{\Sigma_j})$$
-                                                     em que $\boldsymbol{\cal{D}}$ e $\boldsymbol{\Sigma_j}$ são matrizes simétricas definidas positivas e, além disso, que $\boldsymbol{b}_j$ e $\boldsymbol{\xi}_j$ são variáveis aleatórias independentes.
+em que $\boldsymbol{\cal{D}}$ e $\boldsymbol{\Sigma_j}$ são matrizes simétricas definidas positivas e, além disso, que $\boldsymbol{b}_j$ e $\boldsymbol{\xi}_j$ são variáveis aleatórias independentes.
                                                    
-                                                   Sob esse modelo, o vetor de respostas associado à i-ésima unidade amostral tem distribuição normal multivariada com vetor de médias e matriz de covariâncias dados, respectivamente por
+Sob esse modelo, o vetor de respostas associado à i-ésima unidade amostral tem distribuição normal multivariada com vetor de médias e matriz de covariâncias dados, respectivamente por
 $$E(\boldsymbol{Y}_{j}) = \boldsymbol{X}_{j}\boldsymbol{\beta}$$
  e
 $$V(\boldsymbol{Y}_{j}) = \boldsymbol{Z}_{j}\boldsymbol{\cal{D}}\boldsymbol{Z}_{j}^{'} + \boldsymbol{\Sigma_j}$$
